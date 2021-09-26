@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>LogRenderer</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="/res/global.css">
+    <link rel="stylesheet" href="/res/server.css">
+
+    <meta name="theme-color" content="#fafafa">
+</head>
+<body>
+<div class="flex-box">
+    <nav>
+        <div class="sc-logo">
+            <a href="https://www.space-cube.fr">
+                <img src="https://www.space-cube.fr/storage/img/sc-logo.png" alt="SpaceCube" width="50">
+            </a>
+        </div>
+        <div class="title-container">
+            <h1 class="title">Logs</h1>
+        </div>
+        <ul class="servers">
+            {{ range $serv, $displayName := .Servers }}
+                <li><a href="/server/{{$serv}}"
+                       {{if eq $serv getCurrentServer}}class="active"{{end}}>{{$displayName}}</a></li>
+            {{end}}
+        </ul>
+    </nav>
+
+    <main>
+        <div id="logs" class="logs">
+            {{range $logLine := .ServerLogs}}
+            <div class="row">{{$logLine}}</div>{{end}}
+        </div>
+    </main>
+</div>
+<script>
+    const logsDiv = document.getElementById("logs");
+
+    const inlineRegexps = {
+        "time": {regex: {{.SyntaxHighlightingRegexps.Time}}, spaceAfter: true, isLogLevel: false},
+        "info": {regex: {{.SyntaxHighlightingRegexps.Info}}, spaceAfter: true, isLogLevel: true},
+        "warn": {regex: {{.SyntaxHighlightingRegexps.Warn}}, spaceAfter: true, isLogLevel: true},
+        "error": {regex: {{.SyntaxHighlightingRegexps.Error}}, spaceAfter: true, isLogLevel: true},
+        "text": {regex: {{.SyntaxHighlightingRegexps.Text}}, spaceAfter: false, isLogLevel: false},
+    };
+
+    function parseLine(line) {
+        if (line.innerText.length === 0) {
+            return line;
+        }
+        let result = "";
+        for (const elementType in inlineRegexps) {
+            const element = inlineRegexps[elementType];
+            if (!element.regex.test(line.innerText)) {
+                continue;
+            }
+            try {
+                result += `<span class="${elementType}">` + element.regex.exec(line.innerText)[0] + `${element.spaceAfter ? " " : ""}</span>`;
+            } catch (error) {
+                console.error(elementType, element, line, error);
+            }
+        }
+        line.innerHTML = result;
+        return line;
+    }
+
+    function scrollToEnd() {
+        if (logsDiv.firstChild != null) {
+            logsDiv.lastElementChild.scrollIntoView();
+        }
+    }
+
+    function handleEvent(data) {
+        let event;
+        try {
+            event = JSON.parse(data);
+        } catch (e) {
+            console.error(e);
+            console.log("EventData:", data);
+            return;
+        }
+        console.info(event);
+        switch (event["type"]) {
+            case "ADD":
+                const newLine = document.createElement("div");
+                newLine.classList.add("row")
+                newLine.innerText = event["content"];
+                logsDiv.appendChild(parseLine(newLine));
+                scrollToEnd();
+                break;
+            case "RESET":
+                console.warn("Reset !");
+                while (logsDiv.hasChildNodes()) {
+                    logsDiv.removeChild(logsDiv.firstChild);
+                }
+                break;
+            default:
+                console.warn("Unknown event:", event["type"]);
+                break;
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        if (window["WebSocket"]) {
+            const conn = new WebSocket("ws://" + document.location.host + "/ws");
+
+            conn.onclose = () => {
+                console.warn("WebSocket connection closed");
+            }
+
+            conn.onmessage = ev => {
+                // console.log("WebSocket message:", ev);
+                handleEvent(ev.data);
+            }
+
+            if (!conn) {
+                console.error("No WebSocket connection established");
+                return;
+            }
+
+            function register() {
+                if (conn.readyState === 1) {
+                    conn.send('{{.Server}}');
+                    return;
+                }
+                setTimeout(register, 100);
+            }
+
+            register();
+
+            logsDiv.querySelectorAll("div.row").forEach(line => parseLine(line));
+            scrollToEnd();
+        } else {
+            console.error("Your browser does not support WebSockets");
+        }
+    });
+</script>
+</body>
+</html>

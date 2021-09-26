@@ -1,0 +1,24 @@
+main .logs {
+    padding: 0.5rem;
+    scroll-behavior: smooth;
+}
+
+main .row .time {
+    color: #65a6dd;
+}
+
+main .row .info {
+    color: #686ced;
+}
+
+main .row .warn {
+    color: #dcc369;
+}
+
+main .row .error {
+    color: #ff7171;
+}
+
+main .row.error {
+    background-color: #631515;
+}

@@ -1,0 +1,27 @@
+# - - - - - - - - - - - - - - #
+# LogRenderer's configuration #
+# - - - - - - - - - - - - - - #
+
+# The port the web server will listen to
+port: 8081
+
+# All the servers to register for logs watching
+servers:
+    serv_1:
+        display-name: "Server 1"
+        log-file-path: "/path/to/server_1/logs/latest.log"
+        syntax-highlighting:
+            time: '/^\[\d{2}:\d{2}:\d{2}]/m'
+            info: '/(?<=(^\[\d{2}:\d{2}:\d{2}]) )\[.{4,20}\/INFO]/m'
+            warn: '/(?<=(^\[\d{2}:\d{2}:\d{2}]) )\[.{4,20}\/WARN]/m'
+            error: '/(?<=(^\[\d{2}:\d{2}:\d{2}]) )\[.{4,20}\/ERROR]/m'
+            text: '/(?<=(^\[\d{2}:\d{2}:\d{2}] \[.{4,20}\/(INFO|WARN|ERROR)]: )).*$/m'
+    counter:
+        display-name: "Counter"
+        log-file-path: "~/dir/counter-output.log"
+        syntax-highlighting:
+            time: '/^$/'
+            info: '/^$/'
+            warn: '/^$/'
+            error: '/^$/'
+            text: '/^$/'
