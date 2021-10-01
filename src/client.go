@@ -51,17 +51,22 @@ func (c *Client) writer() {
 		case message, ok := <-c.send:
 			err := c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err != nil {
-				return
+				printError(err)
+				continue
 			}
 			if !ok {
 				// The hub closed the channel.
 				err = c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				if err != nil {
+					printError(err)
+				}
 				return
 			}
 
 			w, err := c.conn.NextWriter(websocket.TextMessage)
 			if err != nil {
-				return
+				printError(err)
+				continue
 			}
 			_, _ = w.Write(message)
 
@@ -76,7 +81,11 @@ func (c *Client) writer() {
 				return
 			}
 		case <-ticker.C:
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			err := c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err != nil {
+				printError(err)
+				continue
+			}
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return
 			}
@@ -87,7 +96,10 @@ func (c *Client) writer() {
 func (c *Client) readPump() {
 	defer func() {
 		c.hub.unregister <- c
-		c.conn.Close()
+		err := c.conn.Close()
+		if err != nil {
+			printError(err)
+		}
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
 	err := c.conn.SetReadDeadline(time.Now().Add(pongWait))
