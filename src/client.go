@@ -49,10 +49,13 @@ func (c *Client) writer() {
 	for {
 		select {
 		case message, ok := <-c.send:
-			_ = c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			err := c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err != nil {
+				return
+			}
 			if !ok {
 				// The hub closed the channel.
-				_ = c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				err = c.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
 
@@ -87,8 +90,14 @@ func (c *Client) readPump() {
 		c.conn.Close()
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
-	c.conn.SetReadDeadline(time.Now().Add(pongWait))
-	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+	err := c.conn.SetReadDeadline(time.Now().Add(pongWait))
+	if err != nil {
+		return
+	}
+	c.conn.SetPongHandler(func(string) error {
+		err = c.conn.SetReadDeadline(time.Now().Add(pongWait))
+		return err
+	})
 	for {
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {

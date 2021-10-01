@@ -29,14 +29,6 @@ type ServerConfig struct {
 	SyntaxHighlightingRegexps SyntaxHighlightingConfig `yaml:"syntax-highlighting"`
 }
 
-func (servConfig ServerConfig) clone() ServerConfig {
-	return ServerConfig{
-		server:      servConfig.server,
-		DisplayName: servConfig.DisplayName,
-		LogFilePath: servConfig.LogFilePath,
-	}
-}
-
 // Config represents the object version of the configuration file
 type Config struct {
 	// The port the web server will listen to
