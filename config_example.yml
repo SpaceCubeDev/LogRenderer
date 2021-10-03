@@ -3,7 +3,7 @@
 # - - - - - - - - - - - - - - #
 
 # The port the web server will listen to
-port: 8081
+port: 8080
 
 # All the servers to register for logs watching
 servers:

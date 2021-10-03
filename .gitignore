@@ -4,6 +4,7 @@
 
 # Custom
 test-tools
+compiled/*
 .idea
 
 # User-specific stuff
