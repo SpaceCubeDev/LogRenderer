@@ -56,10 +56,7 @@ func (c *Client) writer() {
 			}
 			if !ok {
 				// The hub closed the channel.
-				err = c.conn.WriteMessage(websocket.CloseMessage, []byte{})
-				if err != nil {
-					printError(err)
-				}
+				_ = c.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
 

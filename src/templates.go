@@ -3,6 +3,7 @@ package main
 import (
 	_ "embed"
 	"errors"
+	"fmt"
 	"html/template"
 	"net/http"
 	"strings"
@@ -14,31 +15,59 @@ var indexHtml string
 //go:embed resources/server.tmpl
 var serverHtml string
 
+//go:embed resources/navbar.tmpl
+var navbarHtml string
+
 //go:embed resources/global.css
 var globalCss []byte
 
 //go:embed resources/server.css
 var serverCss []byte
 
-func parseTemplate(templateName string, funcMap template.FuncMap) (*template.Template, error) {
-	var templatePtr *string
+//go:embed resources/favicon.png
+var favicon []byte
 
-	switch templateName {
-	case "index":
-		templatePtr = &indexHtml
-	case "server":
-		templatePtr = &serverHtml
-	default:
-		printError(errors.New("template '" + templateName + "' not found"))
-		return template.New("error").Parse(errorHtml)
+func parseTemplates(templateNames []string, funcMap template.FuncMap) (finalTmpl *template.Template, err error) {
+	for _, templateName := range templateNames {
+		var templatePtr *string
+
+		switch templateName {
+		case "index":
+			templatePtr = &indexHtml
+		case "server":
+			templatePtr = &serverHtml
+		case "navbar":
+			templatePtr = &navbarHtml
+		default:
+			printError(errors.New("template '" + templateName + "' not found"))
+			return finalTmpl.New("error").Parse(errorHtml)
+		}
+
+		if finalTmpl == nil {
+			finalTmpl, err = template.New(templateName).Funcs(funcMap).Parse(*templatePtr)
+			if err != nil {
+				printError(err)
+				return finalTmpl.New("error").Parse(errorHtml)
+			}
+			continue
+		}
+
+		var tmpl *template.Template
+		if tmpl == nil {
+			tmpl = template.New(templateName)
+		}
+		if templateName == finalTmpl.Name() {
+			tmpl = finalTmpl
+		} else {
+			tmpl = finalTmpl.New(templateName)
+		}
+		_, err = tmpl.Parse(*templatePtr)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	tmpl, err := template.New(templateName).Funcs(funcMap).Parse(*templatePtr)
-	if err != nil {
-		printError(err)
-		return template.New("error").Parse(errorHtml)
-	}
-	return tmpl, nil
+	return
 }
 
 func serveResource(w http.ResponseWriter, r *http.Request) {
@@ -46,14 +75,19 @@ func serveResource(w http.ResponseWriter, r *http.Request) {
 	var resourcePtr *[]byte
 
 	switch resourceName {
-	case "global.css":
+	case "global-css":
 		w.Header().Set("Content-Type", "text/css")
 		resourcePtr = &globalCss
-	case "server.css":
+	case "server-css":
 		w.Header().Set("Content-Type", "text/css")
 		resourcePtr = &serverCss
+	case "favicon-png":
+		w.Header().Set("Content-Type", "image/png")
+		resourcePtr = &favicon
 	default:
-		printError(errors.New("resource '" + resourceName + "' not found"))
+		// printError(errors.New("resource '" + resourceName + "' not found"))
+		w.WriteHeader(http.StatusNotFound)
+		fmt.Fprintln(w, "Resource '"+resourceName+"' not found")
 		return
 	}
 

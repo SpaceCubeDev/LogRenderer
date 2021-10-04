@@ -1,0 +1,19 @@
+{{define "navbar"}}
+    {{$urlPrefix := .UrlPrefix}}
+    <nav>
+        <div class="sc-logo">
+            <a href="https://www.space-cube.fr">
+                <img src="https://www.space-cube.fr/storage/img/sc-logo.png" alt="SpaceCube" width="50">
+            </a>
+        </div>
+        <div class="title-container">
+            <h1 class="title"><a href="{{$urlPrefix}}/">Logs</a></h1>
+        </div>
+        <ul class="servers">
+            {{ range $serv, $displayName := .Servers }}
+                <li><a href="{{$urlPrefix}}/server/{{$serv}}"
+                       {{if eq $serv getCurrentServer}}class="active"{{end}}>{{$displayName}}</a></li>
+            {{end}}
+        </ul>
+    </nav>
+{{end}}

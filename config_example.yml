@@ -4,6 +4,8 @@
 
 # The port the web server will listen to
 port: 8080
+# The url prefix of the web interface (e.g. `/logrenderer` if the index of the application is `/logrenderer`). You leave this empty if the index is the root of your website (`/`)
+url-prefix: "/logrenderer"
 
 # All the servers to register for logs watching
 servers:
@@ -20,8 +22,4 @@ servers:
         display-name: "Counter"
         log-file-path: "~/dir/counter-output.log"
         syntax-highlighting:
-            time: '/^$/'
-            info: '/^$/'
-            warn: '/^$/'
-            error: '/^$/'
-            text: '/^$/'
+            text: '/.*/'

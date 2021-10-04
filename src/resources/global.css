@@ -40,6 +40,15 @@ nav .title {
     margin: -0.1em 0.1em 0.1em;
 }
 
+nav .title a {
+    color: white;
+    text-decoration: none;
+}
+
+nav .title a:hover {
+    text-decoration: underline;
+}
+
 nav ul.servers {
     width: inherit;
     margin-left: 2%;

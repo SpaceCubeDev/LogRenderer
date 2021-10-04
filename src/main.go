@@ -7,9 +7,13 @@ import (
 	fifo "github.com/foize/go.fifo"
 )
 
+const version = "1.1.0"
+
 // func mainn(configPath *string) {
 
 func main() {
+
+	fmt.Print("\nStarting LogRenderer V"+version, " ...\n")
 
 	configPath := flag.String("config", "", "the path to the configuration file")
 	flag.Parse()
@@ -35,7 +39,7 @@ func main() {
 		go unstack(serv, logQueue, outputChannel)
 	}
 
-	err = startServer(config.getWebServerAddress(), config.Servers, outputChannel)
+	err = startServer(config, outputChannel)
 	if err != nil {
 		exitWithError(err)
 	}

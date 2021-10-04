@@ -2,23 +2,12 @@
 <html lang="en">
 <head>
     <title>LogRenderer</title>
-    <link rel="stylesheet" href="/res/global.css">
+
+    <link rel="icon" href="{{.UrlPrefix}}/res/favicon-png" type="image/png" sizes="any">
+
+    <link rel="stylesheet" href="{{.UrlPrefix}}/res/global-css">
 </head>
 <body>
-<nav>
-    <div class="sc-logo">
-        <a href="https://www.space-cube.fr">
-            <img src="https://www.space-cube.fr/storage/img/sc-logo.png" alt="SpaceCube" width="50">
-        </a>
-    </div>
-    <div class="title-container">
-        <h1 class="title">Logs</h1>
-    </div>
-    <ul class="servers">
-        {{ range $serv, $displayName := .Servers }}
-            <li><a href="/server/{{$serv}}">{{$displayName}}</a></li>
-        {{end}}
-    </ul>
-</nav>
+{{template "navbar" .}}
 </body>
 </html>

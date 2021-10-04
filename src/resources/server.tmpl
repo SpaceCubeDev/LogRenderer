@@ -5,34 +5,21 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="stylesheet" href="/res/global.css">
-    <link rel="stylesheet" href="/res/server.css">
+    <link rel="icon" href="{{.UrlPrefix}}/res/favicon-png" type="image/png" sizes="any">
+
+    <link rel="stylesheet" href="{{.UrlPrefix}}/res/global-css">
+    <link rel="stylesheet" href="{{.UrlPrefix}}/res/server-css">
 
     <meta name="theme-color" content="#fafafa">
 </head>
 <body>
 <div class="flex-box">
-    <nav>
-        <div class="sc-logo">
-            <a href="https://www.space-cube.fr">
-                <img src="https://www.space-cube.fr/storage/img/sc-logo.png" alt="SpaceCube" width="50">
-            </a>
-        </div>
-        <div class="title-container">
-            <h1 class="title">Logs</h1>
-        </div>
-        <ul class="servers">
-            {{ range $serv, $displayName := .Servers }}
-                <li><a href="/server/{{$serv}}"
-                       {{if eq $serv getCurrentServer}}class="active"{{end}}>{{$displayName}}</a></li>
-            {{end}}
-        </ul>
-    </nav>
-
+    {{template "navbar" .}}
+    {{$urlPrefix := .UrlPrefix}}
     <main>
         <div id="logs" class="logs">
             {{range $logLine := .ServerLogs}}
-            <div class="row">{{$logLine}}</div>{{end}}
+                <div class="row">{{$logLine}}</div>{{end}}
         </div>
     </main>
 </div>
@@ -105,7 +92,8 @@
 
     document.addEventListener("DOMContentLoaded", () => {
         if (window["WebSocket"]) {
-            const conn = new WebSocket("ws://" + document.location.host + "/ws");
+            const wsProtocol = location.protocol === "https:" ? "wss:" : "ws:";
+            const conn = new WebSocket(wsProtocol + "//" + location.host + "{{$urlPrefix}}/ws");
 
             conn.onclose = () => {
                 console.warn("WebSocket connection closed");

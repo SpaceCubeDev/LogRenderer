@@ -6,36 +6,44 @@ import (
 	"net/http"
 )
 
-func createHandlerFor(servCfg ServerConfig, serverNames map[string]string) func(http.ResponseWriter, *http.Request) {
+// CommonWebData contains data that can be accessed from anywhere
+type CommonWebData struct {
+	UrlPrefix string
+	Servers   map[string]string
+}
+
+func createHandlerFor(servCfg ServerConfig, templateCommonData CommonWebData) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		serverHandler(w, r, servCfg, serverNames)
+		serverHandler(w, r, templateCommonData, servCfg)
 	}
 }
 
-func startServer(address string, servers map[string]ServerConfig, outputChannel chan Event) error {
+func startServer(config Config, outputChannel chan Event) error {
 	hub := newHub()
 	go hub.run(outputChannel)
 
 	serverNames := map[string]string{}
-	// register a path for every server
-	for server, servCfg := range servers {
+	templateCommonData := CommonWebData{
+		UrlPrefix: config.UrlPrefix,
+		Servers:   serverNames,
+	}
+
+	// register a path for each server
+	for server, servCfg := range config.Servers {
 		serverNames[server] = servCfg.DisplayName
 		hub.clientsByServer[server] = []*Client{}
-		http.HandleFunc("/server/"+server, createHandlerFor(servCfg, serverNames))
-		/*http.HandleFunc("/server/"+server, func(w http.ResponseWriter, r *http.Request) {
-			serverHandler(w, r, servCfg.clone(), hub, serverNames)
-		})*/
+		http.HandleFunc("/server/"+server, createHandlerFor(servCfg, templateCommonData))
 	}
 
 	http.HandleFunc("/server", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/", http.StatusSeeOther)
+		http.Redirect(w, r, config.UrlPrefix+"/", http.StatusSeeOther)
 	})
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
 			http.NotFound(w, r)
 		} else {
-			indexHandler(w, r, serverNames)
+			indexHandler(w, r, templateCommonData)
 		}
 	})
 
@@ -43,44 +51,44 @@ func startServer(address string, servers map[string]ServerConfig, outputChannel 
 
 	http.HandleFunc("/res/", serveResource)
 
-	fmt.Println("Starting web server on", address, "...")
+	fmt.Println("Starting web server on", config.getWebServerAddress(), "...")
 
-	return http.ListenAndServe(address, nil)
+	return http.ListenAndServe(config.getWebServerAddress(), nil)
 	/*time.Sleep(5 * time.Second)
 	return nil*/
 }
 
-func indexHandler(w http.ResponseWriter, r *http.Request, servers map[string]string) {
-	tmpl, err := parseTemplate("index", template.FuncMap{})
+func indexHandler(w http.ResponseWriter, r *http.Request, templateCommonData CommonWebData) {
+	tmpl, err := parseTemplates([]string{"index", "navbar"}, template.FuncMap{"getCurrentServer": func() string { return "" }})
 	if err != nil {
 		handleTemplateError(w, tmpl, http.StatusInternalServerError, err)
 		return
 	}
 	err = tmpl.Execute(w, struct {
-		Servers map[string]string
+		CommonWebData
 	}{
-		Servers: servers,
+		CommonWebData: templateCommonData,
 	})
 	if err != nil {
 		printError(err)
 	}
 }
 
-func serverHandler(w http.ResponseWriter, r *http.Request, servCfg ServerConfig, servers map[string]string) {
-	tmpl, err := parseTemplate("server", template.FuncMap{"getCurrentServer": func() string { return servCfg.server }})
+func serverHandler(w http.ResponseWriter, r *http.Request, templateCommonData CommonWebData, servCfg ServerConfig) {
+	tmpl, err := parseTemplates([]string{"server", "navbar"}, template.FuncMap{"getCurrentServer": func() string { return servCfg.server }})
 	if err != nil {
 		handleTemplateError(w, tmpl, http.StatusInternalServerError, err)
 		return
 	}
 
 	err = tmpl.Execute(w, struct {
-		Servers                   map[string]string
+		CommonWebData
 		Server                    string
 		ServerDisplayName         string
 		SyntaxHighlightingRegexps SyntaxHighlightingConfig
 		ServerLogs                []string
 	}{
-		Servers:                   servers,
+		CommonWebData:             templateCommonData,
 		Server:                    servCfg.server,
 		ServerDisplayName:         servCfg.DisplayName,
 		SyntaxHighlightingRegexps: servCfg.SyntaxHighlightingRegexps,

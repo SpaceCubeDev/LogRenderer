@@ -6,6 +6,7 @@ import (
 	"gopkg.in/yaml.v2"
 	"html/template"
 	"os"
+	"reflect"
 	"strconv"
 )
 
@@ -34,6 +35,9 @@ type Config struct {
 	// The port the web server will listen to
 	Port uint16 `yaml:"port"`
 
+	// The url prefix of the web interface (e.g. `/logrenderer` if the index of the application is `/logrenderer`). You leave this empty if the index is the root of your website (`/`)
+	UrlPrefix string `yaml:"url-prefix"`
+
 	// All the servers to list and listen to logs
 	Servers map[string]ServerConfig `yaml:"servers"`
 }
@@ -41,6 +45,7 @@ type Config struct {
 func (config Config) String() string {
 	var str string
 	str += fmt.Sprintf("port: %d\n", config.Port)
+	str += fmt.Sprintf("url-prefix: %s\n", config.UrlPrefix)
 	str += "servers:\n"
 	for serv, servCfg := range config.Servers {
 		str += "\t" + serv + ":\n"
@@ -77,11 +82,25 @@ func loadConfigFrom(configPath string) (Config, error) {
 		if err != nil {
 			exitWithError(err)
 		}
+
 		servCfg.server = serv
 		if servCfg.DisplayName == "" {
 			servCfg.DisplayName = serv
 		}
+
+		regexFields := reflect.ValueOf(&servCfg.SyntaxHighlightingRegexps)
+		for i := 0; i < regexFields.Elem().NumField(); i++ {
+			field := regexFields.Elem().Field(i)
+			if field.String() == "" {
+				field.SetString(`/.^/`)
+			}
+		}
+
 		config.Servers[serv] = servCfg
+	}
+
+	if config.UrlPrefix == "/" {
+		config.UrlPrefix = ""
 	}
 
 	return config, nil
