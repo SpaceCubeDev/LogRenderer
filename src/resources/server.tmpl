@@ -28,29 +28,33 @@
 
     const inlineRegexps = {
         "time": {regex: {{.SyntaxHighlightingRegexps.Time}}, spaceAfter: true, isLogLevel: false},
-        "info": {regex: {{.SyntaxHighlightingRegexps.Info}}, spaceAfter: true, isLogLevel: true},
-        "warn": {regex: {{.SyntaxHighlightingRegexps.Warn}}, spaceAfter: true, isLogLevel: true},
-        "error": {regex: {{.SyntaxHighlightingRegexps.Error}}, spaceAfter: true, isLogLevel: true},
+        "info": {regex: {{.SyntaxHighlightingRegexps.Info}}, spaceAfter: false, isLogLevel: true},
+        "warn": {regex: {{.SyntaxHighlightingRegexps.Warn}}, spaceAfter: false, isLogLevel: true},
+        "error": {regex: {{.SyntaxHighlightingRegexps.Error}}, spaceAfter: false, isLogLevel: true},
         "text": {regex: {{.SyntaxHighlightingRegexps.Text}}, spaceAfter: false, isLogLevel: false},
     };
+
+    Object.freeze(inlineRegexps);
 
     function parseLine(line) {
         if (line.innerText.length === 0) {
             return line;
         }
-        let result = "";
-        for (const elementType in inlineRegexps) {
+        let lineText = line.innerText;
+        // let result = "";
+        for (const elementType of Object.keys(inlineRegexps).reverse()) {
             const element = inlineRegexps[elementType];
             if (!element.regex.test(line.innerText)) {
                 continue;
             }
             try {
-                result += `<span class="${elementType}">` + element.regex.exec(line.innerText)[0] + `${element.spaceAfter ? " " : ""}</span>`;
+                // result += `<span class="${elementType}">` + element.regex.exec(line.innerText)[0] + `${element.spaceAfter ? " " : ""}</span>`;
+                lineText = lineText.replace(element.regex, `<span class="${elementType}">` + "$&" + (element.spaceAfter ? " " : "") + "</span>");
             } catch (error) {
                 console.error(elementType, element, line, error);
             }
         }
-        line.innerHTML = result;
+        line.innerHTML = lineText;
         return line;
     }
 
@@ -93,7 +97,8 @@
     document.addEventListener("DOMContentLoaded", () => {
         if (window["WebSocket"]) {
             const wsProtocol = location.protocol === "https:" ? "wss:" : "ws:";
-            const conn = new WebSocket(wsProtocol + "//" + location.host + "{{$urlPrefix}}/ws");
+            const urlPrefix = '{{$urlPrefix}}';
+            const conn = new WebSocket(wsProtocol + "/\/" + location.host + urlPrefix + "/ws");
 
             conn.onclose = () => {
                 console.warn("WebSocket connection closed");
