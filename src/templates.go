@@ -52,16 +52,11 @@ func parseTemplates(templateNames []string, funcMap template.FuncMap) (finalTmpl
 			continue
 		}
 
-		var tmpl *template.Template
-		if tmpl == nil {
-			tmpl = template.New(templateName)
-		}
 		if templateName == finalTmpl.Name() {
-			tmpl = finalTmpl
+			_, err = finalTmpl.Parse(*templatePtr)
 		} else {
-			tmpl = finalTmpl.New(templateName)
+			_, err = finalTmpl.New(templateName).Parse(*templatePtr)
 		}
-		_, err = tmpl.Parse(*templatePtr)
 		if err != nil {
 			return nil, err
 		}
