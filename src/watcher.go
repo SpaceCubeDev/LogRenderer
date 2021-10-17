@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	fifo "github.com/foize/go.fifo"
 	"github.com/fsnotify/fsnotify"
 	"io"
@@ -10,9 +9,9 @@ import (
 	"sync"
 )
 
-const bufferSize = 16384
+const bufferSize = 32768
 
-func watchServ(logFilePath string, logQueue *fifo.Queue) {
+func watchServ(servName, logFilePath string, logQueue *fifo.Queue) {
 
 	shouldRewatch := true
 	var filePos int64
@@ -31,11 +30,11 @@ func watchServ(logFilePath string, logQueue *fifo.Queue) {
 				if event.Op&fsnotify.Write == fsnotify.Write {
 					file, err := os.Open(logFilePath)
 					if err != nil {
-						log.Fatal("open:", err)
+						log.Fatal(prefix(servName, false), "open:", err)
 					}
 					stat, err := file.Stat()
 					if err != nil {
-						log.Fatal("stat:", err)
+						log.Fatal(prefix(servName, false), "stat:", err)
 					}
 					if stat.Size() < filePos {
 						logQueue.Add(fileEvent{eventType: eventReset})
@@ -44,7 +43,7 @@ func watchServ(logFilePath string, logQueue *fifo.Queue) {
 					}
 					filePos, err = file.Seek(filePos, 0)
 					if err != nil {
-						log.Fatal("seek:", err)
+						log.Fatal(prefix(servName, false), "seek:", err)
 					}
 					buffer := make([]byte, bufferSize)
 					readLength, err := file.Read(buffer)
@@ -53,7 +52,7 @@ func watchServ(logFilePath string, logQueue *fifo.Queue) {
 						if err == io.EOF {
 							continue
 						}
-						log.Fatal("read:", err)
+						log.Fatal(prefix(servName, false), "read:", err)
 					}
 
 					if readLength > 0 {
@@ -64,15 +63,15 @@ func watchServ(logFilePath string, logQueue *fifo.Queue) {
 						})
 					}
 					if readLength >= bufferSize {
-						log.Println("Buffer size is not enough !")
+						log.Println("Buffer size is not enough for", readLength)
 					}
 				} else if event.Op&fsnotify.Rename == fsnotify.Rename {
-					fmt.Println("Rename")
+					log.Println(prefix(servName, false), "Rename")
 					shouldRewatch = true
 					wg.Done()
 					return
 				} else if event.Op&fsnotify.Remove == fsnotify.Remove {
-					fmt.Println("Remove")
+					log.Println(prefix(servName, false), "Remove")
 					if err = checkFile(logFilePath); err != nil {
 						printError(err)
 						shouldRewatch = false
@@ -82,7 +81,7 @@ func watchServ(logFilePath string, logQueue *fifo.Queue) {
 					wg.Done()
 					return
 				} else {
-					log.Println("event:", event)
+					log.Println(prefix(servName, false), "event:", event)
 				}
 			}
 		}()

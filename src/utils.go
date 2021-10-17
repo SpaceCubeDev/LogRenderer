@@ -37,6 +37,14 @@ func checkFile(filePath string) error {
 	return nil
 }
 
+func prefix(servName string, endingSpace bool) string {
+	space := ""
+	if endingSpace {
+		space = " "
+	}
+	return fmt.Sprintf("[%s]%s", servName, space)
+}
+
 func getServerLogs(filePath string) []string {
 	fileContent, err := os.ReadFile(filePath)
 	if err != nil {
