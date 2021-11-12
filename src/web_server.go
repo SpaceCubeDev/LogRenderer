@@ -8,8 +8,9 @@ import (
 
 // CommonWebData contains data that can be accessed from anywhere
 type CommonWebData struct {
-	UrlPrefix string
-	Servers   map[string]string
+	UrlPrefix        string
+	Servers          map[string]string
+	MessageSeparator template.JS
 }
 
 func createHandlerFor(servCfg ServerConfig, templateCommonData CommonWebData) func(http.ResponseWriter, *http.Request) {
@@ -24,8 +25,9 @@ func startServer(config Config, outputChannel chan Event) error {
 
 	serverNames := map[string]string{}
 	templateCommonData := CommonWebData{
-		UrlPrefix: config.UrlPrefix,
-		Servers:   serverNames,
+		UrlPrefix:        config.UrlPrefix,
+		Servers:          serverNames,
+		MessageSeparator: template.JS(messageSeparator),
 	}
 
 	// register a path for each server

@@ -11,8 +11,9 @@ var upgrader = websocket.Upgrader{
 }
 
 var (
-	newline = []byte{'\n'}
-	space   = []byte{' '}
+	newline          = []byte{'\n'}
+	space            = []byte{' '}
+	messageSeparator = []byte("\n,,,\n")
 )
 
 // Hub maintains the set of active clients and broadcasts messages to the
@@ -63,7 +64,7 @@ func (h *Hub) run(eventChan <-chan Event) {
 		case client := <-h.unregister:
 			h.disconnectClient(client, h.clients[client])
 		case evt := <-eventChan:
-			eventMsg := evt.Json()
+			eventMsg := append(evt.Json(), messageSeparator...)
 			for _, client := range h.clientsByServer[evt.Server] {
 				if !client.connected {
 					continue

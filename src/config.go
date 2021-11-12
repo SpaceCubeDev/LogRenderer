@@ -6,16 +6,20 @@ import (
 	"gopkg.in/yaml.v2"
 	"html/template"
 	"os"
-	"reflect"
 	"strconv"
 )
 
-type SyntaxHighlightingConfig struct {
+/*type SyntaxHighlightingConfig struct {
 	Time  template.JS `yaml:"time"`
 	Info  template.JS `yaml:"info"`
 	Warn  template.JS `yaml:"warn"`
 	Error template.JS `yaml:"error"`
 	Text  template.JS `yaml:"text"`
+}*/
+
+type SyntaxHighlightingConfig []struct {
+	Field template.JS `yaml:"field" json:"field"`
+	Regex template.JS `yaml:"regex" json:"regex"`
 }
 
 // ServerConfig represents the properties of a server
@@ -88,11 +92,21 @@ func loadConfigFrom(configPath string) (Config, error) {
 			servCfg.DisplayName = serv
 		}
 
-		regexFields := reflect.ValueOf(&servCfg.SyntaxHighlightingRegexps)
+		/*regexFields := reflect.ValueOf(&servCfg.SyntaxHighlightingRegexps)
 		for i := 0; i < regexFields.Elem().NumField(); i++ {
 			field := regexFields.Elem().Field(i)
 			if field.String() == "" {
 				field.SetString(`/.^/`)
+			}
+		}*/
+		for i, regexField := range servCfg.SyntaxHighlightingRegexps {
+			if regexField.Field == "" {
+				printError(fmt.Errorf("invalid syntax highlighting field name for server %q, it will be ignored", serv))
+				servCfg.SyntaxHighlightingRegexps = append(servCfg.SyntaxHighlightingRegexps[:i], servCfg.SyntaxHighlightingRegexps[i+1:]...)
+				continue
+			}
+			if regexField.Regex == "" {
+				servCfg.SyntaxHighlightingRegexps[i].Regex = `/.^/`
 			}
 		}
 

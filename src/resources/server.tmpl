@@ -26,32 +26,23 @@
 <script>
     const logsDiv = document.getElementById("logs");
 
-    const inlineRegexps = {
-        "time": {regex: {{.SyntaxHighlightingRegexps.Time}}, spaceAfter: true, isLogLevel: false},
-        "info": {regex: {{.SyntaxHighlightingRegexps.Info}}, spaceAfter: false, isLogLevel: true},
-        "warn": {regex: {{.SyntaxHighlightingRegexps.Warn}}, spaceAfter: false, isLogLevel: true},
-        "error": {regex: {{.SyntaxHighlightingRegexps.Error}}, spaceAfter: false, isLogLevel: true},
-        "text": {regex: {{.SyntaxHighlightingRegexps.Text}}, spaceAfter: false, isLogLevel: false},
-    };
-
-    Object.freeze(inlineRegexps);
+    const inlineRegexps = {{.SyntaxHighlightingRegexps}}.reverse();
 
     function parseLine(line) {
         if (line.innerText.length === 0) {
             return line;
         }
-        let lineText = line.innerText;
-        // let result = "";
-        for (const elementType of Object.keys(inlineRegexps).reverse()) {
-            const element = inlineRegexps[elementType];
-            if (!element.regex.test(line.innerText)) {
-                continue;
-            }
+        let lineText = line.textContent;
+        for (const highlighter of inlineRegexps) {
+            const field = highlighter.field;
+            const regexp = new RegExp(highlighter.regex, "m");
             try {
-                // result += `<span class="${elementType}">` + element.regex.exec(line.innerText)[0] + `${element.spaceAfter ? " " : ""}</span>`;
-                lineText = lineText.replace(element.regex, `<span class="${elementType}">` + "$&" + (element.spaceAfter ? " " : "") + "</span>");
+                if (!regexp.test(lineText)) {
+                    continue;
+                }
+                lineText = lineText.replace(regexp, `<span class="${field}">` + "$&" + "</span>");
             } catch (error) {
-                console.error(elementType, element, line, error);
+                console.error(field, regexp, line, error);
             }
         }
         line.innerHTML = lineText;
@@ -76,11 +67,13 @@
         // console.info(event);
         switch (event["type"]) {
             case "ADD":
-                const newLine = document.createElement("div");
-                newLine.classList.add("row")
-                newLine.innerText = event["content"];
-                logsDiv.appendChild(parseLine(newLine));
-                scrollToEnd();
+                if (event["content"] && event["content"].length > 0) {
+                    const newLine = document.createElement("div");
+                    newLine.classList.add("row")
+                    newLine.innerText = event["content"];
+                    logsDiv.appendChild(parseLine(newLine));
+                    scrollToEnd();
+                }
                 break;
             case "RESET":
                 console.warn("Reset !");
@@ -106,7 +99,11 @@
 
             conn.onmessage = ev => {
                 // console.log("WebSocket message:", ev);
-                handleEvent(ev.data);
+                for (const data of ev.data.split('{{.MessageSeparator}}')) {
+                    if (data.length !== 0) {
+                        handleEvent(data);
+                    }
+                }
             }
 
             if (!conn) {
