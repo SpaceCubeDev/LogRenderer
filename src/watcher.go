@@ -19,7 +19,7 @@ func watchServ(servName, logFilePath string, logQueue *fifo.Queue) {
 	for shouldRewatch {
 		watcher, err := fsnotify.NewWatcher()
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal(prefix(servName, true), err)
 		}
 
 		wg := new(sync.WaitGroup)
@@ -30,11 +30,11 @@ func watchServ(servName, logFilePath string, logQueue *fifo.Queue) {
 				if event.Op&fsnotify.Write == fsnotify.Write {
 					file, err := os.Open(logFilePath)
 					if err != nil {
-						log.Fatal(prefix(servName, false), "open:", err)
+						log.Fatal(prefix(servName, true), "open: ", err)
 					}
 					stat, err := file.Stat()
 					if err != nil {
-						log.Fatal(prefix(servName, false), "stat:", err)
+						log.Fatal(prefix(servName, true), "stat: ", err)
 					}
 					if stat.Size() < filePos {
 						logQueue.Add(fileEvent{eventType: eventReset})
@@ -43,7 +43,7 @@ func watchServ(servName, logFilePath string, logQueue *fifo.Queue) {
 					}
 					filePos, err = file.Seek(filePos, 0)
 					if err != nil {
-						log.Fatal(prefix(servName, false), "seek:", err)
+						log.Fatal(prefix(servName, true), "seek: ", err)
 					}
 					buffer := make([]byte, bufferSize)
 					readLength, err := file.Read(buffer)
@@ -52,7 +52,7 @@ func watchServ(servName, logFilePath string, logQueue *fifo.Queue) {
 						if err == io.EOF {
 							continue
 						}
-						log.Fatal(prefix(servName, false), "read:", err)
+						log.Fatal(prefix(servName, true), "read: ", err)
 					}
 
 					if readLength > 0 {
@@ -94,7 +94,7 @@ func watchServ(servName, logFilePath string, logQueue *fifo.Queue) {
 
 		err = watcher.Close()
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal(prefix(servName, true), err)
 		}
 	}
 
