@@ -88,13 +88,13 @@ func watchServ(servName, logFilePath string, logQueue *fifo.Queue) {
 
 		err = watcher.Add(logFilePath)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal(prefix(servName, true), "add watcher:", err)
 		}
 		wg.Wait()
 
 		err = watcher.Close()
 		if err != nil {
-			log.Fatal(prefix(servName, true), err)
+			log.Fatal(prefix(servName, true), "close watcher", err)
 		}
 	}
 
