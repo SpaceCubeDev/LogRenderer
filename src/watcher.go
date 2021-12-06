@@ -93,7 +93,13 @@ func watchServ(servName, logFilePath string, logQueue *fifo.Queue) {
 		if err != nil { // TODO: restart a bit later
 			log.Fatal(prefix(servName, true), "add watcher: ", err)
 		}
+
 		wg.Wait()
+
+		err = watcher.Close()
+		if err != nil {
+			log.Fatal(prefix(servName, true), "close watcher", err)
+		}
 	}
 
 }
