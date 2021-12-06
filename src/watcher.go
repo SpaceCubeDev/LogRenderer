@@ -39,6 +39,7 @@ func watchServ(servName, logFilePath string, logQueue *fifo.Queue) {
 					if stat.Size() < filePos {
 						logQueue.Add(fileEvent{eventType: eventReset})
 						filePos = 0
+						_ = file.Close()
 						continue
 					}
 					filePos, err = file.Seek(filePos, 0)
@@ -50,6 +51,7 @@ func watchServ(servName, logFilePath string, logQueue *fifo.Queue) {
 					filePos += int64(readLength)
 					if err != nil {
 						if err == io.EOF {
+							_ = file.Close()
 							continue
 						}
 						log.Fatal(prefix(servName, true), "read: ", err)
@@ -65,6 +67,7 @@ func watchServ(servName, logFilePath string, logQueue *fifo.Queue) {
 					if readLength >= bufferSize {
 						log.Println("Buffer size is not enough for", readLength)
 					}
+					_ = file.Close()
 				} else if event.Op&fsnotify.Rename == fsnotify.Rename {
 					log.Println(prefix(servName, false), "Rename")
 					shouldRewatch = true
@@ -87,15 +90,10 @@ func watchServ(servName, logFilePath string, logQueue *fifo.Queue) {
 		}()
 
 		err = watcher.Add(logFilePath)
-		if err != nil {
-			log.Fatal(prefix(servName, true), "add watcher:", err)
+		if err != nil { // TODO: restart a bit later
+			log.Fatal(prefix(servName, true), "add watcher: ", err)
 		}
 		wg.Wait()
-
-		err = watcher.Close()
-		if err != nil {
-			log.Fatal(prefix(servName, true), "close watcher", err)
-		}
 	}
 
 }
