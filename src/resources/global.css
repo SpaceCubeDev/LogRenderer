@@ -63,7 +63,7 @@ nav ul.servers {
     padding-left: 1.2%;
     border-left: 1px solid white;
     display: flex;
-    flex-flow: row nowrap;
+    flex-flow: row wrap;
     justify-content: flex-start;
     align-items: center;
     list-style-type: none;
@@ -71,11 +71,12 @@ nav ul.servers {
 }
 
 nav ul.servers li {
-    padding-left: 1%;
+    margin: 2px 0;
+    padding-left: 15px;
 }
 
 nav ul.servers li:not(:last-child) {
-    padding-right: 1%;
+    padding-right: 15px;
     border-right: 1px solid white;
 }
 

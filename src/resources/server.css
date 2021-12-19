@@ -1,6 +1,9 @@
 main .logs {
     padding: 0.5rem;
     scroll-behavior: smooth;
+}
+
+main .row {
     white-space: pre;
 }
 
