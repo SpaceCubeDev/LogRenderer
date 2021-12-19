@@ -52,6 +52,10 @@
         return line;
     }
 
+    function isLogDivFullyScrolled() {
+        return window.scrollY + window.innerHeight - logsDiv.getBoundingClientRect().top - logsDiv.offsetParent.getBoundingClientRect().top === logsDiv.scrollHeight;
+    }
+
     function scrollToEnd() {
         if (logsDiv.firstChild != null) {
             logsDiv.lastElementChild.scrollIntoView();
@@ -74,8 +78,11 @@
                     const newLine = document.createElement("div");
                     newLine.classList.add("row")
                     newLine.innerText = event["content"];
+                    const mustScroll = isLogDivFullyScrolled();
                     logsDiv.appendChild(parseLine(newLine));
-                    scrollToEnd();
+                    if (mustScroll) {
+                        scrollToEnd();
+                    }
                 }
                 break;
             case "RESET":
