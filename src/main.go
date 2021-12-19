@@ -7,7 +7,7 @@ import (
 	fifo "github.com/foize/go.fifo"
 )
 
-const version = "1.1.5"
+const version = "1.1.6"
 
 // func mainn(configPath *string) {
 
@@ -35,7 +35,7 @@ func main() {
 		fmt.Println("Starting to watch for logs of server", serv, "...")
 
 		logQueue := fifo.NewQueue()
-		go watchServ(serv, servCfg.LogFilePath, logQueue)
+		go watchServ(serv, servCfg.LogFilePath, logQueue, config.delayBeforeRewatch)
 		go unstack(serv, logQueue, outputChannel)
 	}
 

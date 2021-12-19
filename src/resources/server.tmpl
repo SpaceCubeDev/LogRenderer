@@ -25,8 +25,11 @@
 </div>
 <script>
     const logsDiv = document.getElementById("logs");
+    const lastUpdateSpan = document.getElementById("last-update");
 
     const inlineRegexps = {{.SyntaxHighlightingRegexps}}.reverse();
+
+    const twoDigits = d => d < 10 ? "0" + d : d;
 
     function parseLine(line) {
         if (line.innerText.length === 0) {
@@ -85,6 +88,9 @@
                 console.warn("Unknown event:", event["type"]);
                 break;
         }
+
+        const date = new Date();
+        lastUpdateSpan.innerText = `${twoDigits(date.getHours())}:${twoDigits(date.getMinutes())}:${twoDigits(date.getSeconds())}`;
     }
 
     document.addEventListener("DOMContentLoaded", () => {

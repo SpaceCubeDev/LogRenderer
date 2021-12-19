@@ -6,6 +6,8 @@
 port: 8080
 # The url prefix of the web interface (e.g. `/logrenderer` if the index of the application is `/logrenderer`). You can leave this empty if the index is the root of your website (`/`)
 url-prefix: "/logrenderer"
+# The delay before a new file watcher is started when a log file is reset/renamed
+delay-before-rewatch: "10ms"
 
 # All the servers to register for logs watching
 servers:

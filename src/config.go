@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"os"
 	"strconv"
+	"time"
 )
 
 /*type SyntaxHighlightingConfig struct {
@@ -42,6 +43,11 @@ type Config struct {
 	// The url prefix of the web interface (e.g. `/logrenderer` if the index of the application is `/logrenderer`). You leave this empty if the index is the root of your website (`/`)
 	UrlPrefix string `yaml:"url-prefix"`
 
+	// The delay before a new file watcher is started when a log file is reset/renamed
+	DelayBeforeRewatch string `yaml:"delay-before-rewatch"`
+	// The real value of DelayBeforeRewatch
+	delayBeforeRewatch time.Duration
+
 	// All the servers to list and listen to logs
 	Servers map[string]ServerConfig `yaml:"servers"`
 }
@@ -50,6 +56,7 @@ func (config Config) String() string {
 	var str string
 	str += fmt.Sprintf("port: %d\n", config.Port)
 	str += fmt.Sprintf("url-prefix: %s\n", config.UrlPrefix)
+	str += fmt.Sprintf("delay-before-rewatch: %s\n", config.delayBeforeRewatch)
 	str += "servers:\n"
 	for serv, servCfg := range config.Servers {
 		str += "\t" + serv + ":\n"
@@ -76,6 +83,15 @@ func loadConfigFrom(configPath string) (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
+
+	delay, err := time.ParseDuration(config.DelayBeforeRewatch)
+	if err != nil {
+		return Config{}, fmt.Errorf("failed to parse delay-before-rewatch: %v", err)
+	}
+	if delay < 0 {
+		return Config{}, errors.New("the delay-before-rewatch cannot be negative")
+	}
+	config.delayBeforeRewatch = delay
 
 	if len(config.Servers) == 0 {
 		return Config{}, errors.New("no server found")

@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"time"
 )
 
 // CommonWebData contains data that can be accessed from anywhere
 type CommonWebData struct {
+	Version          string
+	ExecDate         string
 	UrlPrefix        string
 	Servers          map[string]string
 	MessageSeparator template.JS
@@ -25,6 +28,8 @@ func startServer(config Config, outputChannel chan Event) error {
 
 	serverNames := map[string]string{}
 	templateCommonData := CommonWebData{
+		Version:          "V" + version,
+		ExecDate:         time.Now().Format("15:04:05"),
 		UrlPrefix:        config.UrlPrefix,
 		Servers:          serverNames,
 		MessageSeparator: template.JS(messageSeparator),

@@ -7,11 +7,12 @@ import (
 	"log"
 	"os"
 	"sync"
+	"time"
 )
 
 const bufferSize = 32768
 
-func watchServ(servName, logFilePath string, logQueue *fifo.Queue) {
+func watchServ(servName, logFilePath string, logQueue *fifo.Queue, delayBeforeRewatch time.Duration) {
 
 	shouldRewatch := true
 	var filePos int64
@@ -90,7 +91,7 @@ func watchServ(servName, logFilePath string, logQueue *fifo.Queue) {
 		}()
 
 		err = watcher.Add(logFilePath)
-		if err != nil { // TODO: restart a bit later
+		if err != nil {
 			log.Fatal(prefix(servName, true), "add watcher: ", err)
 		}
 
@@ -98,8 +99,10 @@ func watchServ(servName, logFilePath string, logQueue *fifo.Queue) {
 
 		err = watcher.Close()
 		if err != nil {
-			log.Fatal(prefix(servName, true), "close watcher", err)
+			log.Fatal(prefix(servName, true), "close watcher: ", err)
 		}
+
+		time.Sleep(delayBeforeRewatch)
 	}
 
 }

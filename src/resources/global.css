@@ -12,6 +12,14 @@ body {
     font-family: 'Inconsolata', monospace;
 }
 
+div.flex-box {
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+}
+
 nav {
     width: calc(100vw - 10px);
     padding: 5px;
@@ -84,12 +92,18 @@ nav ul.servers a.active {
     color: #65a6dd;
 }
 
-div.flex-box {
-    position: fixed;
+nav #navbar-right {
     display: flex;
-    flex-direction: column;
-    height: 100%;
-    width: 100%;
+    align-items: center;
+}
+
+nav #navbar-right > span {
+    margin-right: 10px;
+}
+
+nav #navbar-right > span:not(:last-child) {
+    border-right: 1px solid white;
+    padding-right: 10px;
 }
 
 main {
