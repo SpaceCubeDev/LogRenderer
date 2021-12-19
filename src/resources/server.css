@@ -1,6 +1,7 @@
 main .logs {
     padding: 0.5rem;
     scroll-behavior: smooth;
+    white-space: pre;
 }
 
 main .row .time {
