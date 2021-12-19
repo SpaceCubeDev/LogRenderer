@@ -11,7 +11,7 @@ delay-before-rewatch: "10ms"
 
 # All the servers to register for logs watching
 servers:
-    serv_1:
+    -   server-tag: "serv_1"
         display-name: "Server 1"
         log-file-path: "/path/to/server_1/logs/latest.log"
         syntax-highlighting:
@@ -25,7 +25,7 @@ servers:
                 regex: '(?<=(^\[\d{2}:\d{2}:\d{2}]) )\[.{0,30}\/ERROR]'
             -   field: "content"
                 regex: '(?<=(^\[\d{2}:\d{2}:\d{2}] \[.{0,30}\/(INFO|WARN|ERROR)]: )).*$'
-    counter:
+    -   server-tag: "counter"
         display-name: "Counter"
         log-file-path: "~/dir/counter-output.log"
         syntax-highlighting:

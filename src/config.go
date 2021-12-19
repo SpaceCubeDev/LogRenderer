@@ -26,7 +26,7 @@ type SyntaxHighlightingConfig []struct {
 // ServerConfig represents the properties of a server
 type ServerConfig struct {
 	// The raw name that will be used as an ID
-	server string
+	ServerTag string `yaml:"server-tag"`
 	// The name that will be displayed on the web interface
 	DisplayName string `yaml:"display-name"`
 	// The path of the log file to listen to
@@ -49,7 +49,7 @@ type Config struct {
 	delayBeforeRewatch time.Duration
 
 	// All the servers to list and listen to logs
-	Servers map[string]ServerConfig `yaml:"servers"`
+	Servers []ServerConfig `yaml:"servers"`
 }
 
 func (config Config) String() string {
@@ -58,8 +58,8 @@ func (config Config) String() string {
 	str += fmt.Sprintf("url-prefix: %s\n", config.UrlPrefix)
 	str += fmt.Sprintf("delay-before-rewatch: %s\n", config.delayBeforeRewatch)
 	str += "servers:\n"
-	for serv, servCfg := range config.Servers {
-		str += "\t" + serv + ":\n"
+	for _, servCfg := range config.Servers {
+		str += "\t" + servCfg.ServerTag + ":\n"
 		str += "\t\tdisplay-name: " + servCfg.DisplayName + "\n"
 		str += "\t\tlog-file-path: " + servCfg.LogFilePath + "\n"
 	}
@@ -97,15 +97,14 @@ func loadConfigFrom(configPath string) (Config, error) {
 		return Config{}, errors.New("no server found")
 	}
 
-	for serv, servCfg := range config.Servers {
+	for servIndex, servCfg := range config.Servers {
 		err = checkFile(servCfg.LogFilePath)
 		if err != nil {
 			exitWithError(err)
 		}
 
-		servCfg.server = serv
 		if servCfg.DisplayName == "" {
-			servCfg.DisplayName = serv
+			servCfg.DisplayName = servCfg.ServerTag
 		}
 
 		/*regexFields := reflect.ValueOf(&servCfg.SyntaxHighlightingRegexps)
@@ -117,7 +116,7 @@ func loadConfigFrom(configPath string) (Config, error) {
 		}*/
 		for i, regexField := range servCfg.SyntaxHighlightingRegexps {
 			if regexField.Field == "" {
-				printError(fmt.Errorf("invalid syntax highlighting field name for server %q, it will be ignored", serv))
+				printError(fmt.Errorf("invalid syntax highlighting field name for server %q, it will be ignored", servCfg.ServerTag))
 				servCfg.SyntaxHighlightingRegexps = append(servCfg.SyntaxHighlightingRegexps[:i], servCfg.SyntaxHighlightingRegexps[i+1:]...)
 				continue
 			}
@@ -126,7 +125,7 @@ func loadConfigFrom(configPath string) (Config, error) {
 			}
 		}
 
-		config.Servers[serv] = servCfg
+		config.Servers[servIndex] = servCfg
 	}
 
 	if config.UrlPrefix == "/" {

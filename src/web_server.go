@@ -9,10 +9,12 @@ import (
 
 // CommonWebData contains data that can be accessed from anywhere
 type CommonWebData struct {
-	Version          string
-	ExecDate         string
-	UrlPrefix        string
-	Servers          map[string]string
+	Version   string
+	ExecDate  string
+	UrlPrefix string
+	Servers   []struct {
+		Tag, DisplayName string
+	}
 	MessageSeparator template.JS
 }
 
@@ -26,7 +28,7 @@ func startServer(config Config, outputChannel chan Event) error {
 	hub := newHub()
 	go hub.run(outputChannel)
 
-	serverNames := map[string]string{}
+	serverNames := make([]struct{ Tag, DisplayName string }, len(config.Servers))
 	templateCommonData := CommonWebData{
 		Version:          "V" + version,
 		ExecDate:         time.Now().Format("15:04:05"),
@@ -36,10 +38,10 @@ func startServer(config Config, outputChannel chan Event) error {
 	}
 
 	// register a path for each server
-	for server, servCfg := range config.Servers {
-		serverNames[server] = servCfg.DisplayName
-		hub.clientsByServer[server] = []*Client{}
-		http.HandleFunc("/server/"+server, createHandlerFor(servCfg, templateCommonData))
+	for i, servCfg := range config.Servers {
+		serverNames[i] = struct{ Tag, DisplayName string }{Tag: servCfg.ServerTag, DisplayName: servCfg.DisplayName}
+		hub.clientsByServer[servCfg.ServerTag] = []*Client{}
+		http.HandleFunc("/server/"+servCfg.ServerTag, createHandlerFor(servCfg, templateCommonData))
 	}
 
 	http.HandleFunc("/server", func(w http.ResponseWriter, r *http.Request) {
@@ -82,7 +84,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request, templateCommonData Com
 }
 
 func serverHandler(w http.ResponseWriter, r *http.Request, templateCommonData CommonWebData, servCfg ServerConfig) {
-	tmpl, err := parseTemplates([]string{"server", "navbar"}, template.FuncMap{"getCurrentServer": func() string { return servCfg.server }})
+	tmpl, err := parseTemplates([]string{"server", "navbar"}, template.FuncMap{"getCurrentServer": func() string { return servCfg.ServerTag }})
 	if err != nil {
 		handleTemplateError(w, tmpl, http.StatusInternalServerError, err)
 		return
@@ -96,7 +98,7 @@ func serverHandler(w http.ResponseWriter, r *http.Request, templateCommonData Co
 		ServerLogs                []string
 	}{
 		CommonWebData:             templateCommonData,
-		Server:                    servCfg.server,
+		Server:                    servCfg.ServerTag,
 		ServerDisplayName:         servCfg.DisplayName,
 		SyntaxHighlightingRegexps: servCfg.SyntaxHighlightingRegexps,
 		ServerLogs:                getServerLogs(servCfg.LogFilePath),

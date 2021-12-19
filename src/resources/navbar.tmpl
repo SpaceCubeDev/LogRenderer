@@ -10,9 +10,9 @@
             <h1 class="title"><a href="{{$urlPrefix}}/">Logs</a></h1>
         </div>
         <ul class="servers">
-            {{ range $serv, $displayName := .Servers }}
-                <li><a href="{{$urlPrefix}}/server/{{$serv}}"
-                       {{if eq $serv getCurrentServer}}class="active"{{end}}>{{$displayName}}</a></li>
+            {{ range $i, $serv := .Servers }}
+                <li><a href="{{$urlPrefix}}/server/{{$serv.Tag}}"
+                       {{if eq $serv.Tag getCurrentServer}}class="active"{{end}}>{{$serv.DisplayName}}</a></li>
             {{end}}
         </ul>
         <div id="navbar-right">

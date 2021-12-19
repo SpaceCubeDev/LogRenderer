@@ -7,7 +7,7 @@ import (
 	fifo "github.com/foize/go.fifo"
 )
 
-const version = "1.1.6"
+const version = "1.1.7"
 
 // func mainn(configPath *string) {
 
@@ -31,12 +31,12 @@ func main() {
 
 	outputChannel := make(chan Event, 16)
 
-	for serv, servCfg := range config.Servers {
-		fmt.Println("Starting to watch for logs of server", serv, "...")
+	for _, servCfg := range config.Servers {
+		fmt.Println("Starting to watch for logs of server", servCfg.ServerTag, "...")
 
 		logQueue := fifo.NewQueue()
-		go watchServ(serv, servCfg.LogFilePath, logQueue, config.delayBeforeRewatch)
-		go unstack(serv, logQueue, outputChannel)
+		go watchServ(servCfg.ServerTag, servCfg.LogFilePath, logQueue, config.delayBeforeRewatch)
+		go unstack(servCfg.ServerTag, logQueue, outputChannel)
 	}
 
 	err = startServer(config, outputChannel)
