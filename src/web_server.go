@@ -31,7 +31,6 @@ func startServer(config Config, outputChannel chan Event) error {
 	serverNames := make([]struct{ Tag, DisplayName string }, len(config.Servers))
 	templateCommonData := CommonWebData{
 		Version:          "V" + version,
-		ExecDate:         time.Now().Format("15:04:05"),
 		UrlPrefix:        config.UrlPrefix,
 		Servers:          serverNames,
 		MessageSeparator: template.JS(messageSeparator),
@@ -73,6 +72,8 @@ func indexHandler(w http.ResponseWriter, r *http.Request, templateCommonData Com
 		handleTemplateError(w, tmpl, http.StatusInternalServerError, err)
 		return
 	}
+
+	templateCommonData.ExecDate = time.Now().Format("15:04:05")
 	err = tmpl.Execute(w, struct {
 		CommonWebData
 	}{
@@ -90,6 +91,7 @@ func serverHandler(w http.ResponseWriter, r *http.Request, templateCommonData Co
 		return
 	}
 
+	templateCommonData.ExecDate = time.Now().Format("15:04:05")
 	err = tmpl.Execute(w, struct {
 		CommonWebData
 		Server                    string
