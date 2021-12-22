@@ -5,21 +5,22 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="icon" href="{{.UrlPrefix}}/res/favicon-png" type="image/png" sizes="any">
+    <link rel="icon" href="{{ .UrlPrefix }}/res/favicon-png" type="image/png" sizes="any">
 
-    <link rel="stylesheet" href="{{.UrlPrefix}}/res/global-css">
-    <link rel="stylesheet" href="{{.UrlPrefix}}/res/server-css">
+    <link rel="stylesheet" href="{{ .UrlPrefix }}/res/global-css">
+    <link rel="stylesheet" href="{{ .UrlPrefix }}/res/server-css">
 
     <meta name="theme-color" content="#fafafa">
 </head>
 <body>
 <div class="flex-box">
-    {{template "navbar" .}}
-    {{$urlPrefix := .UrlPrefix}}
+    {{ template "navbar" . -}}
+    {{ $urlPrefix := .UrlPrefix }}
     <main>
         <div id="logs" class="logs">
-            {{range $logLine := .ServerLogs}}
-                <div class="row">{{$logLine}}</div>{{end}}
+            {{- range $logLine := .ServerLogs }}
+                <div class="row">{{ $logLine }}</div>
+            {{- end }}
         </div>
     </main>
 </div>
@@ -27,7 +28,7 @@
     const logsDiv = document.getElementById("logs");
     const lastUpdateSpan = document.getElementById("last-update");
 
-    const inlineRegexps = {{.SyntaxHighlightingRegexps}}.reverse();
+    const inlineRegexps = {{ .SyntaxHighlightingRegexps }}.reverse();
 
     const twoDigits = d => d < 10 ? "0" + d : d;
 
@@ -103,7 +104,7 @@
     document.addEventListener("DOMContentLoaded", () => {
         if (window["WebSocket"]) {
             const wsProtocol = location.protocol === "https:" ? "wss:" : "ws:";
-            const urlPrefix = '{{$urlPrefix}}';
+            const urlPrefix = '{{ $urlPrefix }}';
             const conn = new WebSocket(wsProtocol + "/\/" + location.host + urlPrefix + "/ws");
 
             conn.onclose = () => {
@@ -112,7 +113,7 @@
 
             conn.onmessage = ev => {
                 // console.log("WebSocket message:", ev);
-                for (const data of ev.data.split('{{.MessageSeparator}}')) {
+                for (const data of ev.data.split('{{ .MessageSeparator }}')) {
                     if (data.length !== 0) {
                         handleEvent(data);
                     }
@@ -126,7 +127,7 @@
 
             function register() {
                 if (conn.readyState === 1) {
-                    conn.send('{{.Server}}');
+                    conn.send('{{ .Server }}');
                     return;
                 }
                 setTimeout(register, 100);

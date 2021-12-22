@@ -39,7 +39,8 @@ func parseTemplates(templateNames []string, funcMap template.FuncMap) (finalTmpl
 		case "navbar":
 			templatePtr = &navbarHtml
 		default:
-			printError(errors.New("template '" + templateName + "' not found"))
+			err = errors.New("template '" + templateName + "' not found")
+			printError(err)
 			return finalTmpl.New("error").Parse(errorHtml)
 		}
 

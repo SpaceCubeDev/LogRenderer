@@ -1,5 +1,5 @@
-{{define "navbar"}}
-    {{$urlPrefix := .UrlPrefix}}
+{{ define "navbar" }}
+    {{- $urlPrefix := .UrlPrefix -}}
     <nav>
         <div class="sc-logo">
             <a href="https://www.space-cube.fr">
@@ -7,17 +7,19 @@
             </a>
         </div>
         <div class="title-container">
-            <h1 class="title"><a href="{{$urlPrefix}}/">Logs</a></h1>
+            <h1 class="title"><a href="{{ $urlPrefix }}/">Logs</a></h1>
         </div>
         <ul class="servers">
-            {{ range $i, $serv := .Servers }}
-                <li><a href="{{$urlPrefix}}/server/{{$serv.Tag}}"
-                       {{if eq $serv.Tag getCurrentServer}}class="active"{{end}}>{{$serv.DisplayName}}</a></li>
-            {{end}}
+            {{- range $i, $serv := .Servers }}
+                <li>
+                    <a href="{{ $urlPrefix }}/server/{{ $serv.Tag }}"
+                       {{- if eq $serv.Tag getCurrentServer }} class="active"{{ end }}>{{ $serv.DisplayName }}</a>
+                </li>
+            {{ end -}}
         </ul>
         <div id="navbar-right">
-            <span id="last-update" title="Last update">{{.ExecDate}}</span>
-            <span id="version" title="Current LogRenderer version">{{.Version}}</span>
+            <span id="last-update" title="Last update">{{ .ExecDate }}</span>
+            <span id="version" title="Current LogRenderer version">{{ .Version }}</span>
         </div>
     </nav>
-{{end}}
+{{ end }}
