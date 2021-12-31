@@ -18,6 +18,8 @@ type CommonWebData struct {
 	MessageSeparator template.JS
 }
 
+var indexFunctionMap = template.FuncMap{"isServer": func() bool { return false }, "getCurrentServer": func() string { return "" }}
+
 func createHandlerFor(servCfg ServerConfig, templateCommonData CommonWebData) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		serverHandler(w, r, templateCommonData, servCfg)
@@ -67,7 +69,7 @@ func startServer(config Config, outputChannel chan Event) error {
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request, templateCommonData CommonWebData) {
-	tmpl, err := parseTemplates([]string{"index", "navbar"}, template.FuncMap{"getCurrentServer": func() string { return "" }})
+	tmpl, err := parseTemplates([]string{"index", "navbar"}, indexFunctionMap)
 	if err != nil {
 		handleTemplateError(w, tmpl, http.StatusInternalServerError, err)
 		return
@@ -85,7 +87,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request, templateCommonData Com
 }
 
 func serverHandler(w http.ResponseWriter, r *http.Request, templateCommonData CommonWebData, servCfg ServerConfig) {
-	tmpl, err := parseTemplates([]string{"server", "navbar"}, template.FuncMap{"getCurrentServer": func() string { return servCfg.ServerTag }})
+	tmpl, err := parseTemplates([]string{"server", "navbar"}, template.FuncMap{"isServer": func() bool { return true }, "getCurrentServer": func() string { return servCfg.ServerTag }})
 	if err != nil {
 		handleTemplateError(w, tmpl, http.StatusInternalServerError, err)
 		return

@@ -13,12 +13,14 @@
             {{- range $i, $serv := .Servers }}
                 <li>
                     <a href="{{ $urlPrefix }}/server/{{ $serv.Tag }}"
-                       {{- if eq $serv.Tag getCurrentServer }} class="active"{{ end }}>{{ $serv.DisplayName }}</a>
+                            {{- if and (isServer) (eq $serv.Tag getCurrentServer) }} class="active"{{ end }}>{{ $serv.DisplayName }}</a>
                 </li>
             {{ end -}}
         </ul>
         <div id="navbar-right">
-            <span id="last-update" title="Last update">{{ .ExecDate }}</span>
+            {{- if isServer }}<span id="websocket-status" title="Websocket status"></span>{{ end -}} <span
+                    id="last-update"
+                    title="Last update">{{ .ExecDate }}</span>
             <span id="version" title="Current LogRenderer version">{{ .Version }}</span>
         </div>
     </nav>

@@ -1,3 +1,15 @@
+#websocket-status {
+    height: 0.7rem;
+    width: 0.7rem;
+    background-color: red;
+    border-radius: 50%;
+    display: inline-block;
+    margin-top: 0.1rem;
+    margin-left: 0.5rem;
+    border-right: none !important;
+    padding-right: 0 !important;
+}
+
 main .logs {
     padding: 0.5rem;
     scroll-behavior: smooth;
