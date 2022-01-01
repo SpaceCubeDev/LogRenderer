@@ -7,7 +7,7 @@ import (
 	fifo "github.com/foize/go.fifo"
 )
 
-const version = "1.1.7"
+const version = "1.1.8"
 
 // func mainn(configPath *string) {
 

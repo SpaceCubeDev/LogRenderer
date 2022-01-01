@@ -25,12 +25,25 @@
     </main>
 </div>
 <script>
+    const searchInput = document.getElementById("search-input");
     const logsDiv = document.getElementById("logs");
     const lastUpdateSpan = document.getElementById("last-update");
 
     const inlineRegexps = {{ .SyntaxHighlightingRegexps }}.reverse();
 
     const twoDigits = d => d < 10 ? "0" + d : d;
+
+    function handleLineFocus(target) {
+        for (let i = 0; !target.classList.contains("row") && i < 10; i++) {
+            target = target.parentElement;
+        }
+        const line = target;
+        searchInput.value = "";
+        handleSearch();
+        line.classList.add("highlighted");
+        line.scrollIntoView();
+        setTimeout((row) => row.classList.remove("highlighted"), 2000, line);
+    }
 
     function parseLine(line) {
         if (line.innerText.length === 0) {
@@ -50,6 +63,7 @@
             }
         }
         line.innerHTML = lineText;
+        line.addEventListener("click", ev => searchInput.value !== "" ? handleLineFocus(ev.target) : null);
         return line;
     }
 
@@ -101,11 +115,35 @@
         lastUpdateSpan.innerText = `${twoDigits(date.getHours())}:${twoDigits(date.getMinutes())}:${twoDigits(date.getSeconds())}`;
     }
 
+    function handleSearch() {
+        const value = searchInput.value.toLowerCase();
+        if (value === "") {
+            document.querySelectorAll("main .row.hidden").forEach(row => row.classList.remove("hidden"));
+        } else {
+            document.querySelectorAll("main .row").forEach(row => {
+                if (row.textContent.toLowerCase().includes(value)) {
+                    row.classList.remove("hidden");
+                } else {
+                    row.classList.add("hidden");
+                }
+            });
+        }
+    }
+
     function updateWebsocketStatus(alive) {
-        document.getElementById("websocket-status").style.backgroundColor = alive ? "green" : "red";
+        if (alive) {
+            document.getElementById("websocket-status").classList.add("connected");
+        } else {
+            document.getElementById("websocket-status").classList.remove("connected");
+        }
+        // document.getElementById("websocket-status").style.backgroundColor = alive ? "green" : "red";
     }
 
     document.addEventListener("DOMContentLoaded", () => {
+        searchInput.value = "";
+        searchInput.addEventListener("input", handleSearch);
+        searchInput.addEventListener("focusout", scrollToEnd);
+
         if (window["WebSocket"]) {
             const wsProtocol = location.protocol === "https:" ? "wss:" : "ws:";
             const urlPrefix = '{{ $urlPrefix }}';

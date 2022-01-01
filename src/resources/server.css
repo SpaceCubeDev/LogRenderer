@@ -1,3 +1,41 @@
+#search-bar {
+    display: flex;
+    align-items: center;
+}
+
+#search-input {
+    background: transparent;
+    height: 20px;
+    width: 20px;
+    padding: 2px;
+    border: 1px solid #4b4b4b;
+    border-radius: 2px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#search-input:focus, #search-input:valid {
+    width: 150px;
+    padding: 4px;
+    border: 1px solid #4b4b4b;
+    border-radius: 2px;
+    cursor: text;
+}
+
+#search-icon {
+    transform: translateX(-175%) rotate(45deg) scale(1.25);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#search-input:focus + #search-icon,
+#search-input:valid + #search-icon {
+    color: transparent;
+    cursor: text;
+    transform: translateX(50%) rotate(45deg);
+}
+
 #websocket-status {
     height: 0.7rem;
     width: 0.7rem;
@@ -10,31 +48,60 @@
     padding-right: 0 !important;
 }
 
+#websocket-status.connected {
+    -webkit-animation-name: pulse;
+    -webkit-animation-duration: 2.5s;
+    -webkit-animation-iteration-count: infinite;
+}
+
 main .logs {
     padding: 0.5rem;
     scroll-behavior: smooth;
 }
 
-main .row {
+main .logs .row {
     white-space: break-spaces;
 }
 
-main .row .time {
+main .logs .row .time {
     color: #65a6dd;
 }
 
-main .row .info {
+main .logs .row .info {
     color: #686ced;
 }
 
-main .row .warn {
+main .logs .row .warn {
     color: #dcc369;
 }
 
-main .row .error {
+main .logs .row .error {
     color: #ff7171;
 }
 
-main .row.error {
+main .logs .row.error {
     background-color: #631515;
+}
+
+main .logs .row.hidden {
+    display: none;
+}
+
+main .logs .row.highlighted {
+    background: linear-gradient(to right, #006400ba 50%, transparent);
+}
+
+@-webkit-keyframes pulse {
+    from {
+        background-color: #749a02;
+        -webkit-box-shadow: 0 0 9px 3px #333;
+    }
+    50% {
+        background-color: #91bd09;
+        -webkit-box-shadow: 0 0 10px 3px #91bd09;
+    }
+    to {
+        background-color: #749a02;
+        -webkit-box-shadow: 0 0 9px 3px #333;
+    }
 }

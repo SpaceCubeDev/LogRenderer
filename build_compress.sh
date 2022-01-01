@@ -1,6 +1,6 @@
 #!/bin/bash -eu
 
-VERSION="1.1.7"
+VERSION="1.1.8"
 OUTPUT_FILENAME="LogRenderer-$VERSION"
 OUTPUT_DIR="compiled"
 

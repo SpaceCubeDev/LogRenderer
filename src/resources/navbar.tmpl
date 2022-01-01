@@ -17,10 +17,20 @@
                 </li>
             {{ end -}}
         </ul>
+        {{- if isServer }}
+            <div id="search-bar">
+                <input id="search-input" required title="Search for logs">
+                <label id="search-icon" for="search-input" title="Search for logs">&#9906;</label>
+            </div>
+        {{ end -}}
         <div id="navbar-right">
-            {{- if isServer }}<span id="websocket-status" title="Websocket status"></span>{{ end -}} <span
-                    id="last-update"
-                    title="Last update">{{ .ExecDate }}</span>
+            {{- if isServer }}
+                {{/*<div id="websocket-status-container">
+                    <span id="websocket-status-wave"></span>*/}}
+                    <span id="websocket-status" title="Websocket status"></span>
+                {{/*</div>*/}}
+            {{ end -}}
+            <span id="last-update" title="Last update">{{ .ExecDate }}</span>
             <span id="version" title="Current LogRenderer version">{{ .Version }}</span>
         </div>
     </nav>
