@@ -24,7 +24,7 @@
 }
 
 #search-icon {
-    transform: translateX(-175%) rotate(45deg) scale(1.25);
+    transform: translateX(-184%) rotate(45deg) scale(1.25);
     cursor: pointer;
     transition: all 0.2s ease;
 }
