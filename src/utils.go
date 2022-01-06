@@ -1,9 +1,13 @@
 package main
 
 import (
+	"compress/gzip"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -37,6 +41,20 @@ func checkFile(filePath string) error {
 	return nil
 }
 
+func checkDir(dirPath string) error {
+	fileStat, err := os.Stat(dirPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return errors.New("directory at '" + dirPath + "' not found")
+		}
+		return err
+	}
+	if !fileStat.IsDir() {
+		return errors.New("file at '" + dirPath + "' must be a directory")
+	}
+	return nil
+}
+
 func prefix(servName string, endingSpace bool) string {
 	space := ""
 	if endingSpace {
@@ -52,4 +70,80 @@ func getServerLogs(filePath string) []string {
 		return []string{"Error while reading log file: " + err.Error()}
 	}
 	return strings.Split(string(fileContent), "\n")
+}
+
+func listArchivedLogs(logsDirPath, logFilePattern string) ([]string, error) {
+	entries, err := os.ReadDir(logsDirPath)
+	if err != nil {
+		return []string{}, err
+	}
+
+	var validEntries []string
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+
+		match, err := filepath.Match(logFilePattern, entry.Name())
+		if err != nil {
+			return []string{}, err
+		}
+		if match {
+			validEntries = append(validEntries, entry.Name())
+		}
+	}
+
+	for i, j := 0, len(validEntries)-1; i < j; i, j = i+1, j-1 {
+		validEntries[i], validEntries[j] = validEntries[j], validEntries[i]
+	}
+
+	return validEntries, nil
+}
+
+func getArchiveLogs(logsFilePath string) []string {
+	uncompressed, err := uncompress(logsFilePath)
+	if err != nil {
+		err = errors.New("Error while uncompressing archived log file: " + err.Error())
+		printError(err)
+		return []string{err.Error()}
+	}
+
+	return strings.Split(string(uncompressed), "\n")
+}
+
+func uncompress(filePath string) ([]byte, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	buf := make([]byte, 512)
+	n, err := file.Read(buf)
+	if err != nil {
+		return nil, err
+	}
+	_, err = file.Seek(0, 0)
+	if err != nil {
+		return nil, errors.New("failed to seek archived log file: " + err.Error())
+	}
+
+	contentType := http.DetectContentType(buf[:n])
+	if i := strings.Index(contentType, ";"); i >= 0 {
+		contentType = contentType[:i]
+	}
+
+	switch contentType {
+	case "text/plain":
+		return io.ReadAll(file)
+	case "application/x-gzip":
+		gzReader, err := gzip.NewReader(file)
+		if err != nil {
+			return nil, err
+		}
+		return io.ReadAll(gzReader)
+	default:
+		return io.ReadAll(file)
+	}
 }

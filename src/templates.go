@@ -15,14 +15,23 @@ var indexHtml string
 //go:embed resources/server.tmpl
 var serverHtml string
 
+//go:embed resources/archive.tmpl
+var archiveHtml string
+
 //go:embed resources/navbar.tmpl
 var navbarHtml string
+
+//go:embed resources/archive-loader.tmpl
+var archiveLoaderHtml string
 
 //go:embed resources/global.css
 var globalCss []byte
 
 //go:embed resources/server.css
 var serverCss []byte
+
+//go:embed resources/archive.css
+var archiveCss []byte
 
 //go:embed resources/favicon.png
 var favicon []byte
@@ -32,12 +41,16 @@ func parseTemplates(templateNames []string, funcMap template.FuncMap) (finalTmpl
 		var templatePtr *string
 
 		switch templateName {
+		case "navbar":
+			templatePtr = &navbarHtml
 		case "index":
 			templatePtr = &indexHtml
 		case "server":
 			templatePtr = &serverHtml
-		case "navbar":
-			templatePtr = &navbarHtml
+		case "archive-loader":
+			templatePtr = &archiveLoaderHtml
+		case "archive":
+			templatePtr = &archiveHtml
 		default:
 			err = errors.New("template '" + templateName + "' not found")
 			printError(err)
@@ -77,6 +90,9 @@ func serveResource(w http.ResponseWriter, r *http.Request) {
 	case "server-css":
 		w.Header().Set("Content-Type", "text/css")
 		resourcePtr = &serverCss
+	case "archive-css":
+		w.Header().Set("Content-Type", "text/css")
+		resourcePtr = &archiveCss
 	case "favicon-png":
 		w.Header().Set("Content-Type", "image/png")
 		resourcePtr = &favicon

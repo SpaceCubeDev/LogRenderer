@@ -24,16 +24,23 @@
 }
 
 #search-icon {
-    transform: translateX(-184%) rotate(45deg) scale(1.25);
+    /*transform: translateX(-184%) rotate(45deg) scale(1.25);*/
+    position: relative;
+    left: -50%;
+    height: 20px;
+    width: 20px;
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
 #search-input:focus + #search-icon,
 #search-input:valid + #search-icon {
+    visibility: hidden;
+    opacity: 0;
     color: transparent;
     cursor: text;
-    transform: translateX(50%) rotate(45deg);
+    transform: translateX(450%);
+    /*transform: translateX(50%) rotate(45deg);*/
 }
 
 #websocket-status {

@@ -31,6 +31,12 @@ type ServerConfig struct {
 	DisplayName string `yaml:"display-name"`
 	// The path of the log file to listen to
 	LogFilePath string `yaml:"log-file-path"`
+	// The path of the logs archive directory
+	ArchiveLogsDirPath string `yaml:"archived-logs-dir-path"`
+	// The format of the log filenames
+	ArchiveLogFilenameFormat string `yaml:"archive-log-filename-format"`
+	// Whether archive logs reading is enabled or not
+	archivesEnabled bool
 	// The regexps for the syntax highlighting for the logs of this server
 	SyntaxHighlightingRegexps SyntaxHighlightingConfig `yaml:"syntax-highlighting"`
 }
@@ -62,6 +68,8 @@ func (config Config) String() string {
 		str += "\t" + servCfg.ServerTag + ":\n"
 		str += "\t\tdisplay-name: " + servCfg.DisplayName + "\n"
 		str += "\t\tlog-file-path: " + servCfg.LogFilePath + "\n"
+		str += "\t\tarchived-logs-dir-path: " + servCfg.ArchiveLogsDirPath + "\n"
+		str += "\t\tarchived-log-filename-format: " + servCfg.ArchiveLogsDirPath + "\n"
 	}
 	return str
 }
@@ -101,6 +109,17 @@ func loadConfigFrom(configPath string) (Config, error) {
 		err = checkFile(servCfg.LogFilePath)
 		if err != nil {
 			exitWithError(err)
+		}
+
+		servCfg.archivesEnabled = servCfg.ArchiveLogsDirPath != ""
+		if servCfg.archivesEnabled {
+			err = checkDir(servCfg.ArchiveLogsDirPath)
+			if err != nil {
+				exitWithError(err)
+			}
+			if servCfg.ArchiveLogFilenameFormat == "" {
+				exitWithError(errors.New("no archive log filename format provided"))
+			}
 		}
 
 		if servCfg.DisplayName == "" {

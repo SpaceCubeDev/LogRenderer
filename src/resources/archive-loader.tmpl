@@ -1,0 +1,36 @@
+{{ define "archive-loader" }}
+    {{/* Archive loader modal open button */}}
+    <span id="archive-loader-trigger" title="Toggle archive loader modal">
+        <svg width="752pt" height="752pt" viewBox="0 0 752 752" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <clipPath id="a">
+                    <path d="m139.21 178h473.58v419h-473.58z"/>
+                </clipPath>
+            </defs>
+            <g clip-path="url(#a)">
+                <path d="m425.74 492.2-98.617 98.613c-7.6719 7.6719-20.082 7.6992-27.84-0.0625-7.707-7.707-7.6875-20.219-0.066406-27.84l98.633-98.633c-13.758-19.344-21.852-43-21.852-68.547 0-65.387 53.008-118.39 118.4-118.39 65.387 0 118.39 53.008 118.39 118.39s-53.008 118.39-118.39 118.39c-25.598 0-49.293-8.1211-68.656-21.926zm15.34-38.266c14.043 12.871 32.762 20.727 53.316 20.727 43.59 0 78.93-35.34 78.93-78.93 0-43.594-35.34-78.93-78.93-78.93-43.594 0-78.934 35.336-78.934 78.93 0 20.504 7.8203 39.184 20.641 53.219 0.94922 0.66406 1.8555 1.418 2.707 2.2695 0.85156 0.85156 1.6094 1.7617 2.2695 2.7148zm-301.87-156.87c0-10.898 8.8633-19.73 19.641-19.73h158.04c10.848 0 19.641 8.7578 19.641 19.73 0 10.898-8.8594 19.734-19.641 19.734h-158.04c-10.848 0-19.641-8.7578-19.641-19.734zm0 98.664c0-10.898 8.8516-19.734 19.789-19.734h98.547c10.93 0 19.793 8.7617 19.793 19.734 0 10.898-8.8516 19.73-19.793 19.73h-98.547c-10.93 0-19.789-8.7578-19.789-19.73zm0 98.664c0-10.898 8.8516-19.734 19.789-19.734h98.547c10.93 0 19.793 8.7578 19.793 19.734 0 10.895-8.8516 19.73-19.793 19.73h-98.547c-10.93 0-19.789-8.7578-19.789-19.73zm0-295.99c0-10.898 8.8672-19.734 19.781-19.734h394.55c10.922 0 19.781 8.7578 19.781 19.734 0 10.895-8.8711 19.73-19.781 19.73h-394.55c-10.926 0-19.781-8.7578-19.781-19.73z"
+                      fill-rule="evenodd" fill="white"/>
+            </g>
+        </svg>
+    </span>
+
+    {{/* Archive loader modal itself */}}
+    <div id="archive-loader-background" {{- if not .NoLogsLoadedYet }} class="hidden" {{ end -}}>
+        <div id="archive-loader">
+            <h1>Archived logs browser</h1>
+            <hr/>
+            <div class="archive-loader-select">
+                <label for="archive-selector">Choose an archived log file:</label>
+                <div class="archive-loader-select--container">
+                    <select id="archive-selector">
+                        {{- range $archive := .AvailableLogsArchives }}
+                            <option value="{{ $archive }}">{{ $archive }}</option>
+                        {{- end }}
+                    </select>
+                </div>
+                <hr/>
+                <button id="submit-archive">View</button>
+            </div>
+        </div>
+    </div>
+{{ end }}

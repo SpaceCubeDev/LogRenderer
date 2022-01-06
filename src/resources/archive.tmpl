@@ -20,21 +20,20 @@
     <main>
         {{- template "archive-loader" . -}}
         <div id="logs" class="logs">
-            {{- range $logLine := .ServerLogs }}
-                <div class="row">{{ $logLine }}</div>
-            {{- end }}
+            {{- if not .NoLogsLoadedYet }}
+                {{- range $logLine := .ServerLogs }}
+                    <div class="row">{{ $logLine }}</div>
+                {{- end }}
+            {{ end -}}
         </div>
     </main>
 </div>
 <script>
     const searchInput = document.getElementById("search-input");
-    const lastUpdateSpan = document.getElementById("last-update");
     const archiveLoaderBackground = document.getElementById("archive-loader-background");
     const logsDiv = document.getElementById("logs");
 
     const inlineRegexps = {{ .SyntaxHighlightingRegexps }}.reverse();
-
-    const twoDigits = d => d < 10 ? "0" + d : d;
 
     function handleLineFocus(target) {
         for (let i = 0; !target.classList.contains("row") && i < 10; i++) {
@@ -100,44 +99,6 @@
         }
     }
 
-    function handleEvent(data) {
-        let event;
-        try {
-            event = JSON.parse(data);
-        } catch (e) {
-            console.error(e);
-            console.log("EventData:", data);
-            return;
-        }
-        // console.info(event);
-        switch (event["type"]) {
-            case "ADD":
-                if (event["content"] && event["content"].length > 0) {
-                    const newLine = document.createElement("div");
-                    newLine.classList.add("row")
-                    newLine.innerText = event["content"];
-                    const mustScroll = isLogDivFullyScrolled();
-                    logsDiv.appendChild(parseLine(newLine));
-                    if (mustScroll) {
-                        scrollToEnd();
-                    }
-                }
-                break;
-            case "RESET":
-                console.warn("Reset !");
-                while (logsDiv.hasChildNodes()) {
-                    logsDiv.removeChild(logsDiv.firstChild);
-                }
-                break;
-            default:
-                console.warn("Unknown event:", event["type"]);
-                break;
-        }
-
-        const date = new Date();
-        lastUpdateSpan.innerText = `${twoDigits(date.getHours())}:${twoDigits(date.getMinutes())}:${twoDigits(date.getSeconds())}`;
-    }
-
     function handleSearch() {
         const value = searchInput.value.toLowerCase();
         if (value === "") {
@@ -153,15 +114,6 @@
         }
     }
 
-    function updateWebsocketStatus(alive) {
-        if (alive) {
-            document.getElementById("websocket-status").classList.add("connected");
-        } else {
-            document.getElementById("websocket-status").classList.remove("connected");
-        }
-        // document.getElementById("websocket-status").style.backgroundColor = alive ? "green" : "red";
-    }
-
     document.addEventListener("DOMContentLoaded", () => {
         searchInput.value = "";
         searchInput.addEventListener("input", handleSearch);
@@ -171,46 +123,6 @@
         document.getElementById("archive-loader-background").addEventListener("click", toggleArchiveLoader);
         document.getElementById("archive-loader").addEventListener("click", ev => ev.stopPropagation());
         document.getElementById("submit-archive").addEventListener("click", submitArchive)
-
-        if (window["WebSocket"]) {
-            const wsProtocol = location.protocol === "https:" ? "wss:" : "ws:";
-            const urlPrefix = '{{ $urlPrefix }}';
-            const conn = new WebSocket(wsProtocol + "/\/" + location.host + urlPrefix + "/ws");
-
-            conn.onclose = () => {
-                updateWebsocketStatus(false);
-                console.warn("WebSocket connection closed");
-            }
-
-            conn.onmessage = ev => {
-                // console.log("WebSocket message:", ev);
-                for (const data of ev.data.split('{{ .MessageSeparator }}')) {
-                    if (data.length !== 0) {
-                        handleEvent(data);
-                    }
-                }
-            }
-
-            updateWebsocketStatus(!!conn);
-
-            if (!conn) {
-                console.error("No WebSocket connection established");
-                return;
-            }
-
-            function register() {
-                if (conn.readyState === 1) {
-                    conn.send('{{ .Server }}');
-                    return;
-                }
-                setTimeout(register, 100);
-            }
-
-            register();
-        } else {
-            updateWebsocketStatus(false);
-            console.error("Your browser does not support WebSockets");
-        }
 
         logsDiv.querySelectorAll("#logs > div.row").forEach(line => parseLine(line));
         scrollToEnd();
