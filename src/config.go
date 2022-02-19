@@ -140,7 +140,7 @@ func loadConfigFrom(configPath string) (Config, error) {
 				continue
 			}
 			if regexField.Regex == "" {
-				servCfg.SyntaxHighlightingRegexps[i].Regex = `/.^/`
+				servCfg.SyntaxHighlightingRegexps[i].Regex = `/.^/` // Regexp that matches nothing
 			}
 		}
 
