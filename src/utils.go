@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -31,7 +32,7 @@ func exitWithError(err error) {
 
 func debugPrint(msg string) {
 	if doDebug {
-		fmt.Println("[DEBUG]", msg)
+		log.Println("[DEBUG]", msg)
 	}
 }
 

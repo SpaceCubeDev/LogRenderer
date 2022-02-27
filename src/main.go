@@ -8,9 +8,9 @@ import (
 	"time"
 )
 
-const version = "2.0.0"
+const version = "2.0.1"
 
-const dynamicServersRefreshInterval = 10 * time.Second
+const instancesRefreshIntervalPerServer = 2 * time.Second
 
 var doDebug bool
 
@@ -56,6 +56,7 @@ func main() {
 	}
 	// dynamic servers startup
 	dynamicServers := make(DynamicServers)
+	instancesRefreshInterval := instancesRefreshIntervalPerServer * time.Duration(len(config.Servers.Dynamic))
 	for _, servCfg := range config.Servers.Dynamic {
 		fmt.Println("Starting to watch for instances logs of dynamic server", servCfg.ServerTag, "...")
 
@@ -64,7 +65,7 @@ func main() {
 		hub.clientsByDynamicServer[servCfg.ServerTag] = make(map[string][]*Client)
 
 		// TODO: pass only the map instead of the whole hub ?
-		go server.watchForInstances(hub, outputChannel, dynamicServersRefreshInterval)
+		go server.watchForInstances(hub, outputChannel, instancesRefreshInterval)
 	}
 
 	err = startServer(config, hub, outputChannel)

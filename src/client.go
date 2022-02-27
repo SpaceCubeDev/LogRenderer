@@ -2,8 +2,8 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/gorilla/websocket"
-	"log"
 	"time"
 )
 
@@ -50,7 +50,7 @@ func (c *Client) writer() {
 		case message, ok := <-c.send:
 			err := c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err != nil {
-				printError(err)
+				printError(fmt.Errorf("failed to set write deadline for message: %v", err))
 				continue
 			}
 			if !ok {
@@ -61,7 +61,7 @@ func (c *Client) writer() {
 
 			w, err := c.conn.NextWriter(websocket.TextMessage)
 			if err != nil {
-				printError(err)
+				printError(fmt.Errorf("failed to get next writer: %v", err))
 				continue
 			}
 			_, _ = w.Write(message)
@@ -79,10 +79,10 @@ func (c *Client) writer() {
 		case <-ticker.C:
 			err := c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err != nil {
-				printError(err)
+				printError(fmt.Errorf("failed to set write deadline for ticker: %v", err))
 				continue
 			}
-			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+			if err = c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return
 			}
 		}
@@ -94,7 +94,7 @@ func (c *Client) readPump() {
 		c.hub.unregister <- c
 		err := c.conn.Close()
 		if err != nil {
-			printError(err)
+			printError(fmt.Errorf("failed to close connection: %v", err))
 		}
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
@@ -106,11 +106,11 @@ func (c *Client) readPump() {
 		err = c.conn.SetReadDeadline(time.Now().Add(pongWait))
 		return err
 	})
-	for {
+	for c.connected {
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("error: %v", err)
+				printError(fmt.Errorf("failed to read message: %v", err))
 			}
 			break
 		}

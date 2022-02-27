@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/gorilla/websocket"
 	"net/http"
 	"sync"
@@ -50,30 +51,30 @@ func newHub() *Hub {
 	}
 }
 
-func (h *Hub) disconnectClient(client *Client, server string) {
-	if _, ok := h.clients[client]; ok {
+func (hub *Hub) disconnectClient(client *Client, server string) {
+	if _, ok := hub.clients[client]; ok {
 		client.connected = false
-		delete(h.clients, client)
+		delete(hub.clients, client)
 		close(client.send)
 		if serverTag, serverId, isDynamic := parseWSServer(server); isDynamic { // remove client from dynamic servers
-			h.clientsByDynamicServerMutex.Lock()
-			defer h.clientsByDynamicServerMutex.Unlock()
-			dynamicServersClients := h.clientsByDynamicServer[serverTag][serverId]
+			hub.clientsByDynamicServerMutex.Lock()
+			defer hub.clientsByDynamicServerMutex.Unlock()
+			dynamicServersClients := hub.clientsByDynamicServer[serverTag][serverId]
 			// for instance, instanceClients := range dynamicServersClients {
 			for i, c := range dynamicServersClients {
 				if c == client {
-					h.clientsByDynamicServer[serverTag][serverId] = append(dynamicServersClients[:i], dynamicServersClients[i+1:]...)
+					hub.clientsByDynamicServer[serverTag][serverId] = append(dynamicServersClients[:i], dynamicServersClients[i+1:]...)
 					return
 				}
 			}
 			// }
 		} else { // remove client from classic servers
-			h.clientsByServerMutex.Lock()
-			defer h.clientsByServerMutex.Unlock()
-			serverClients := h.clientsByServer[server]
+			hub.clientsByServerMutex.Lock()
+			defer hub.clientsByServerMutex.Unlock()
+			serverClients := hub.clientsByServer[server]
 			for i, c := range serverClients {
 				if c == client {
-					h.clientsByServer[server] = append(serverClients[:i], serverClients[i+1:]...)
+					hub.clientsByServer[server] = append(serverClients[:i], serverClients[i+1:]...)
 					return
 				}
 			}
@@ -82,16 +83,16 @@ func (h *Hub) disconnectClient(client *Client, server string) {
 	}
 }
 
-func (h *Hub) run(eventChan <-chan Event) {
+func (hub *Hub) run(eventChan <-chan Event) {
 	for {
 		select {
-		case client := <-h.register:
-			h.clients[client] = client.server
-		case client := <-h.unregister:
-			h.disconnectClient(client, h.clients[client])
+		case client := <-hub.register:
+			hub.clients[client] = client.server
+		case client := <-hub.unregister:
+			hub.disconnectClient(client, hub.clients[client])
 		case evt := <-eventChan:
 			eventMsg := append(evt.Json(), messageSeparator...)
-			for _, client := range h.getClientsSubscribedTo(evt) {
+			for _, client := range hub.getClientsSubscribedTo(evt) {
 				if !client.connected {
 					continue
 				}
@@ -99,7 +100,7 @@ func (h *Hub) run(eventChan <-chan Event) {
 				case client.send <- eventMsg:
 					// Message sent successfully
 				default:
-					h.disconnectClient(client, evt.Server)
+					hub.disconnectClient(client, evt.Server)
 				}
 			}
 		}
@@ -107,16 +108,16 @@ func (h *Hub) run(eventChan <-chan Event) {
 }
 
 // serveWs handles websocket requests from the peer.
-func (h *Hub) serveWs(w http.ResponseWriter, r *http.Request) {
+func (hub *Hub) serveWs(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		printError(err)
+		printError(fmt.Errorf("failed to upgrade connection: %v", err))
 		return
 	}
 
 	client := &Client{
 		connected: true,
-		hub:       h,
+		hub:       hub,
 		conn:      conn,
 		send:      make(chan []byte, 256),
 	}
@@ -128,12 +129,26 @@ func (h *Hub) serveWs(w http.ResponseWriter, r *http.Request) {
 	go client.readPump()
 }
 
-func (h Hub) getClientsSubscribedTo(evt Event) []*Client {
+func (hub Hub) getClientsSubscribedTo(evt Event) []*Client {
 	if evt.isDynamic {
-		if instances, found := h.clientsByDynamicServer[evt.Server]; found {
+		if instances, found := hub.clientsByDynamicServer[evt.Server]; found {
 			return instances[evt.instance]
 		}
 		return []*Client{} // server not found
 	}
-	return h.clientsByServer[evt.Server]
+	return hub.clientsByServer[evt.Server]
+}
+
+func (hub *Hub) sendResetMessage(server, instance string) {
+	resetMessage := Event{
+		Type:      eventReset,
+		Server:    server,
+		isDynamic: true,
+		instance:  instance,
+	}.Json()
+	for _, c := range hub.clientsByDynamicServer[server][instance] {
+		if c.connected {
+			c.send <- resetMessage
+		}
+	}
 }

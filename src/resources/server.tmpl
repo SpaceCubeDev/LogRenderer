@@ -35,7 +35,7 @@
     const lastUpdateSpan = document.getElementById("last-update");
     {{- if .AreArchivedLogsAvailable -}}
     const archiveLoaderBackground = document.getElementById("archive-loader-background");
-    {{- end -}}
+    {{- end }}
     const logsDiv = document.getElementById("logs");
 
     const inlineRegexps = {{ .SyntaxHighlightingRegexps }}.reverse();
@@ -77,7 +77,7 @@
     }
 
     function isLogDivFullyScrolled() {
-        return window.scrollY + window.innerHeight - logsDiv.getBoundingClientRect().top - logsDiv.offsetParent.getBoundingClientRect().top === logsDiv.scrollHeight;
+        return Math.abs((window.scrollY + window.innerHeight - logsDiv.getBoundingClientRect().top - logsDiv.offsetParent.getBoundingClientRect().top) - logsDiv.scrollHeight) < 20;
     }
 
     function scrollToEnd() {
@@ -132,7 +132,7 @@
                 }
                 break;
             case "RESET":
-                console.warn("Reset !");
+                console.info("Reset !");
                 while (logsDiv.hasChildNodes()) {
                     logsDiv.removeChild(logsDiv.firstChild);
                 }
@@ -189,7 +189,7 @@
                             // create link to the instance
                             const a = document.createElement("a");
                             a.classList.add("dynamic-dropdown-content-link");
-                            if (instance === {{ .Instance }}) {
+                            if (dropdown.getAttribute("server-type") === {{ .Server }} && instance === {{ .Instance }}) {
                                 a.classList.add("active");
                             }
                             a.href = "{{ .UrlPrefix }}/dynamic/" + serverType + "/" + instance;

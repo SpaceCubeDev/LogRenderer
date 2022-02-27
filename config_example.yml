@@ -28,9 +28,9 @@ servers:
                     regex: '(?<=(^\[\d{2}:\d{2}:\d{2}]) )\[.{0,30}\/ERROR]'
                 -   field: "content"
                     regex: '(?<=(^\[\d{2}:\d{2}:\d{2}] \[.{0,30}\/(INFO|WARN|ERROR)]: )).*$'
-                archived-logs-dir-path: "/path/to/server_1/logs"
-                # The archived log reader supports plain text and gzip plain text files
-                archive-log-filename-format: "*.log.gz"
+            archived-logs-dir-path: "/path/to/server_1/logs"
+            # The archived log reader supports plain text and gzip plain text files
+            archive-log-filename-format: "*.log.gz"
         -   server-tag: "counter"
             display-name: "Counter"
             log-file-path: "~/dir/counter-output.log"

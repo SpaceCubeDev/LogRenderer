@@ -19,7 +19,7 @@ type DynamicServerInstance struct {
 type DynamicServer struct {
 	config    DynamicServerConfig
 	tag       string // shorthand for config.ServerTag
-	instances []DynamicServerInstance
+	instances []*DynamicServerInstance
 }
 
 func (server DynamicServer) watchForInstances(hub *Hub, outputChannel chan Event, watchInterval time.Duration) {
@@ -45,9 +45,15 @@ func (server DynamicServer) watchForInstances(hub *Hub, outputChannel chan Event
 				if _, exists := stillRunning[instance.id]; exists {
 					continue // already watching it
 				}
-				hub.clientsByDynamicServer[server.tag][instance.id] = []*Client{}
+				debugPrint(fmt.Sprintf("Found new instance of server %q: %q", server.tag, instance.id))
+				// preserve existing WS connections between instance reboots
+				if _, exists := hub.clientsByDynamicServer[server.tag][instance.id]; exists {
+					hub.sendResetMessage(server.tag, instance.id)
+				} else {
+					hub.clientsByDynamicServer[server.tag][instance.id] = []*Client{}
+				}
 				// instance given as parameter to not be replaced by the for loop current instance
-				go func(instance DynamicServerInstance) {
+				go func(instance *DynamicServerInstance) {
 					logQueue := fifo.NewQueue()
 					stop := false
 					go unstackDynamic(server.tag, instance.id, logQueue, outputChannel, &stop)
@@ -59,9 +65,8 @@ func (server DynamicServer) watchForInstances(hub *Hub, outputChannel chan Event
 					// watches until it returns
 					stop = true
 					instance.ended = true
-					delete(hub.clientsByDynamicServer[server.tag], instance.id)
-				}(instance)
-				server.instances = append(server.instances, instance)
+				}(&instance)
+				server.instances = append(server.instances, &instance)
 			}
 		}
 
@@ -70,7 +75,7 @@ func (server DynamicServer) watchForInstances(hub *Hub, outputChannel chan Event
 }
 
 func newDynamicServer(config DynamicServerConfig) *DynamicServer {
-	return &DynamicServer{config: config, tag: config.ServerTag, instances: []DynamicServerInstance{}}
+	return &DynamicServer{config: config, tag: config.ServerTag, instances: []*DynamicServerInstance{}}
 }
 
 type DynamicServers map[string]*DynamicServer

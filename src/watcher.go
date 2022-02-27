@@ -15,7 +15,12 @@ const bufferSize = 32768
 func watchServ(logQueue *fifo.Queue, properties watchProperties) {
 
 	shouldRewatch := true
-	var filePos int64
+
+	stat, err := os.Stat(properties.logFilePath)
+	if err != nil {
+		log.Fatal(prefix(properties.servName, true), "stat: ", err)
+	}
+	filePos := stat.Size()
 
 	for shouldRewatch {
 		watcher, err := fsnotify.NewWatcher()
@@ -66,7 +71,7 @@ func watchServ(logQueue *fifo.Queue, properties watchProperties) {
 						})
 					}
 					if readLength >= bufferSize {
-						log.Println("Buffer size is not enough for", readLength)
+						log.Println(prefix(properties.servName, false), "Buffer size is not enough, missing", readLength-bufferSize, "of length")
 					}
 					_ = file.Close()
 				} else if event.Op&fsnotify.Rename == fsnotify.Rename {

@@ -7,4 +7,3 @@
 - Make archive loader trigger button not appear if log archiving is disabled for the current server
 - Better error handling ...
 - Move the archive loader background & inners outside from the main (Y position too low)
-- Fix the auto scroll on Chromium
