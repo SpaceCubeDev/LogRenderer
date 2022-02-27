@@ -5,9 +5,14 @@ import (
 	"flag"
 	"fmt"
 	fifo "github.com/foize/go.fifo"
+	"time"
 )
 
 const version = "1.2.1"
+
+const dynamicServersRefreshInterval = 10 * time.Second
+
+var doDebug bool
 
 // func mainn(configPath *string) {
 
@@ -27,19 +32,42 @@ func main() {
 		exitWithError(err)
 	}
 
+	doDebug = config.Debug
+
 	fmt.Print("Config:\n", config)
 
 	outputChannel := make(chan Event, 16)
+	hub := newHub()
 
-	for _, servCfg := range config.Servers {
-		fmt.Println("Starting to watch for logs of server", servCfg.ServerTag, "...")
+	// classic servers startup
+	for _, servCfg := range config.Servers.Classic {
+		fmt.Println("Starting to watch for logs of classic server", servCfg.ServerTag, "...")
+
+		hub.clientsByServer[servCfg.ServerTag] = []*Client{}
 
 		logQueue := fifo.NewQueue()
-		go watchServ(servCfg.ServerTag, servCfg.LogFilePath, logQueue, config.delayBeforeRewatch)
+		go watchServ(logQueue, watchProperties{
+			servName:                  servCfg.ServerTag,
+			logFilePath:               servCfg.LogFilePath,
+			shouldRewatchOnFileRemove: true,
+			delayBeforeRewatch:        config.delayBeforeRewatch,
+		})
 		go unstack(servCfg.ServerTag, logQueue, outputChannel)
 	}
+	// dynamic servers startup
+	dynamicServers := make(DynamicServers)
+	for _, servCfg := range config.Servers.Dynamic {
+		fmt.Println("Starting to watch for instances logs of dynamic server", servCfg.ServerTag, "...")
 
-	err = startServer(config, outputChannel)
+		server := newDynamicServer(servCfg)
+		dynamicServers[servCfg.ServerTag] = server
+		hub.clientsByDynamicServer[servCfg.ServerTag] = make(map[string][]*Client)
+
+		// TODO: pass only the map instead of the whole hub ?
+		go server.watchForInstances(hub, outputChannel, dynamicServersRefreshInterval)
+	}
+
+	err = startServer(config, hub, outputChannel)
 	if err != nil {
 		exitWithError(err)
 	}

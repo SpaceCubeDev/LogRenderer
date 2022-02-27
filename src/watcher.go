@@ -12,7 +12,7 @@ import (
 
 const bufferSize = 32768
 
-func watchServ(servName, logFilePath string, logQueue *fifo.Queue, delayBeforeRewatch time.Duration) {
+func watchServ(logQueue *fifo.Queue, properties watchProperties) {
 
 	shouldRewatch := true
 	var filePos int64
@@ -20,7 +20,7 @@ func watchServ(servName, logFilePath string, logQueue *fifo.Queue, delayBeforeRe
 	for shouldRewatch {
 		watcher, err := fsnotify.NewWatcher()
 		if err != nil {
-			log.Fatal(prefix(servName, true), err)
+			log.Fatal(prefix(properties.servName, true), err)
 		}
 
 		wg := new(sync.WaitGroup)
@@ -29,13 +29,13 @@ func watchServ(servName, logFilePath string, logQueue *fifo.Queue, delayBeforeRe
 		go func() {
 			for event := range watcher.Events {
 				if event.Op&fsnotify.Write == fsnotify.Write {
-					file, err := os.Open(logFilePath)
+					file, err := os.Open(properties.logFilePath)
 					if err != nil {
-						log.Fatal(prefix(servName, true), "open: ", err)
+						log.Fatal(prefix(properties.servName, true), "open: ", err)
 					}
 					stat, err := file.Stat()
 					if err != nil {
-						log.Fatal(prefix(servName, true), "stat: ", err)
+						log.Fatal(prefix(properties.servName, true), "stat: ", err)
 					}
 					if stat.Size() < filePos {
 						logQueue.Add(fileEvent{eventType: eventReset})
@@ -45,7 +45,7 @@ func watchServ(servName, logFilePath string, logQueue *fifo.Queue, delayBeforeRe
 					}
 					filePos, err = file.Seek(filePos, 0)
 					if err != nil {
-						log.Fatal(prefix(servName, true), "seek: ", err)
+						log.Fatal(prefix(properties.servName, true), "seek: ", err)
 					}
 					buffer := make([]byte, bufferSize)
 					readLength, err := file.Read(buffer)
@@ -55,7 +55,7 @@ func watchServ(servName, logFilePath string, logQueue *fifo.Queue, delayBeforeRe
 							_ = file.Close()
 							continue
 						}
-						log.Fatal(prefix(servName, true), "read: ", err)
+						log.Fatal(prefix(properties.servName, true), "read: ", err)
 					}
 
 					if readLength > 0 {
@@ -70,39 +70,52 @@ func watchServ(servName, logFilePath string, logQueue *fifo.Queue, delayBeforeRe
 					}
 					_ = file.Close()
 				} else if event.Op&fsnotify.Rename == fsnotify.Rename {
-					log.Println(prefix(servName, false), "Rename")
-					shouldRewatch = true
+					log.Println(prefix(properties.servName, false), "Rename")
+					shouldRewatch = properties.shouldRewatchOnFileRemove
 					wg.Done()
 					return
 				} else if event.Op&fsnotify.Remove == fsnotify.Remove {
-					log.Println(prefix(servName, false), "Remove")
-					if err = checkFile(logFilePath); err != nil {
-						printError(err)
-						shouldRewatch = false
+					log.Println(prefix(properties.servName, false), "Remove")
+					if properties.shouldRewatchOnFileRemove {
+						if err = checkFile(properties.logFilePath); err != nil {
+							printError(err)
+							shouldRewatch = false
+						} else {
+							shouldRewatch = true
+						}
 					} else {
-						shouldRewatch = true
+						shouldRewatch = false
 					}
 					wg.Done()
 					return
 				} else {
-					log.Println(prefix(servName, false), "event:", event)
+					log.Println(prefix(properties.servName, false), "event:", event)
 				}
 			}
 		}()
 
-		err = watcher.Add(logFilePath)
+		err = watcher.Add(properties.logFilePath)
 		if err != nil {
-			log.Fatal(prefix(servName, true), "add watcher: ", err)
+			log.Fatal(prefix(properties.servName, true), "add watcher: ", err)
 		}
 
 		wg.Wait()
 
 		err = watcher.Close()
 		if err != nil {
-			log.Fatal(prefix(servName, true), "close watcher: ", err)
+			log.Fatal(prefix(properties.servName, true), "close watcher: ", err)
 		}
 
-		time.Sleep(delayBeforeRewatch)
+		if shouldRewatch {
+			time.Sleep(properties.delayBeforeRewatch)
+		}
 	}
 
+}
+
+type watchProperties struct {
+	servName                  string
+	logFilePath               string
+	shouldRewatchOnFileRemove bool
+	delayBeforeRewatch        time.Duration
 }

@@ -2,12 +2,14 @@ package main
 
 import (
 	"compress/gzip"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -25,6 +27,12 @@ func exitWithError(err error) {
 	fmt.Println("- - - - - - - - - -")
 	fmt.Println(err)
 	os.Exit(1)
+}
+
+func debugPrint(msg string) {
+	if doDebug {
+		fmt.Println("[DEBUG]", msg)
+	}
 }
 
 func checkFile(filePath string) error {
@@ -61,6 +69,38 @@ func prefix(servName string, endingSpace bool) string {
 		space = " "
 	}
 	return fmt.Sprintf("[%s]%s", servName, space)
+}
+
+func prettier(w http.ResponseWriter, message string, data interface{}, status int) {
+	if data == nil {
+		data = struct{}{}
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	err := json.NewEncoder(w).Encode(struct {
+		Message string      `json:"message"`
+		Data    interface{} `json:"data"`
+	}{
+		Message: message,
+		Data:    data,
+	})
+	if err != nil {
+		printError(fmt.Errorf("failed to marshal http response to json: %v", err))
+	}
+}
+
+func findAllGroups(re *regexp.Regexp, str string) map[string]string {
+	results := make(map[string]string)
+	matches := re.FindStringSubmatch(str)
+	if matches == nil {
+		return map[string]string{}
+	}
+	for i, groupName := range re.SubexpNames() {
+		if i != 0 && groupName != "" {
+			results[groupName] = matches[i]
+		}
+	}
+	return results
 }
 
 func getServerLogs(filePath string) []string {

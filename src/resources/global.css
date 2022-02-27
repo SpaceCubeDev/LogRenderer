@@ -78,17 +78,55 @@ nav ul.servers li:not(:last-child) {
     border-right: 1px solid white;
 }
 
-nav ul.servers a {
+nav ul.servers li > * {
     color: white;
     text-decoration: none;
+    cursor: pointer;
 }
 
-nav ul.servers a:hover {
+nav ul.servers li a:hover, span.dynamic-dropdown-title:hover {
     text-decoration: underline;
 }
 
-nav ul.servers a.active {
-    color: #65a6dd;
+nav ul.servers li a.active, span.dynamic-dropdown-title.active, a.dynamic-dropdown-content-link.active {
+    color: #65a6dd !important;
+}
+
+nav ul.servers li .dynamic-dropdown .dynamic-dropdown-content {
+    display: none;
+    position: absolute;
+    top: 55px;
+    background-color: #373737;
+    min-width: 130px;
+    box-shadow: 0 0 20px 0 rgba(7,7,7,0.5);
+    z-index: 1;
+}
+
+nav ul.servers li .dynamic-dropdown.selected .dynamic-dropdown-content {
+    display: block;
+}
+
+nav ul.servers li .dynamic-dropdown .dynamic-dropdown-content .dynamic-dropdown-content-link {
+    float: none;
+    padding: 12px 16px;
+    color: white;
+    text-decoration: none;
+    display: block;
+    text-align: left;
+}
+
+nav ul.servers li .dynamic-dropdown .dynamic-dropdown-content .dynamic-dropdown-content-link:hover {
+    text-decoration: underline;
+}
+
+nav ul.servers li .dynamic-dropdown .dynamic-dropdown-content .dynamic-dropdown-content-hr {
+    width: 65%;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+nav ul.servers li .dynamic-dropdown .dynamic-dropdown-content .dynamic-dropdown-content-hr:last-child {
+    display: none;
 }
 
 nav #navbar-right {

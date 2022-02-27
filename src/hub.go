@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/gorilla/websocket"
 	"net/http"
+	"sync"
 )
 
 var upgrader = websocket.Upgrader{
@@ -22,8 +23,13 @@ type Hub struct {
 	// Registered clients with the server they are subscribed to.
 	clients map[*Client]string
 
-	// Registered clients subscribed to every server.
-	clientsByServer map[string][]*Client
+	// Registered clients subscribed to every classic server.
+	clientsByServer      map[string][]*Client
+	clientsByServerMutex *sync.Mutex
+
+	// Registered clients subscribed to every instance of every dynamic server.
+	clientsByDynamicServer      map[string]map[string][]*Client
+	clientsByDynamicServerMutex *sync.Mutex
 
 	// Register requests from the clients.
 	register chan *Client
@@ -34,10 +40,13 @@ type Hub struct {
 
 func newHub() *Hub {
 	return &Hub{
-		clients:         make(map[*Client]string),
-		clientsByServer: make(map[string][]*Client),
-		register:        make(chan *Client),
-		unregister:      make(chan *Client),
+		clients:                     make(map[*Client]string),
+		clientsByServer:             make(map[string][]*Client),
+		clientsByServerMutex:        new(sync.Mutex),
+		clientsByDynamicServer:      make(map[string]map[string][]*Client),
+		clientsByDynamicServerMutex: new(sync.Mutex),
+		register:                    make(chan *Client),
+		unregister:                  make(chan *Client),
 	}
 }
 
@@ -46,13 +55,30 @@ func (h *Hub) disconnectClient(client *Client, server string) {
 		client.connected = false
 		delete(h.clients, client)
 		close(client.send)
-		serverClients := h.clientsByServer[server]
-		for i, c := range serverClients {
-			if c == client {
-				h.clientsByServer[server] = append(serverClients[:i], serverClients[i+1:]...)
-				return
+		if serverTag, serverId, isDynamic := parseWSServer(server); isDynamic { // remove client from dynamic servers
+			h.clientsByDynamicServerMutex.Lock()
+			defer h.clientsByDynamicServerMutex.Unlock()
+			dynamicServersClients := h.clientsByDynamicServer[serverTag][serverId]
+			// for instance, instanceClients := range dynamicServersClients {
+			for i, c := range dynamicServersClients {
+				if c == client {
+					h.clientsByDynamicServer[serverTag][serverId] = append(dynamicServersClients[:i], dynamicServersClients[i+1:]...)
+					return
+				}
+			}
+			// }
+		} else { // remove client from classic servers
+			h.clientsByServerMutex.Lock()
+			defer h.clientsByServerMutex.Unlock()
+			serverClients := h.clientsByServer[server]
+			for i, c := range serverClients {
+				if c == client {
+					h.clientsByServer[server] = append(serverClients[:i], serverClients[i+1:]...)
+					return
+				}
 			}
 		}
+
 	}
 }
 
@@ -65,7 +91,7 @@ func (h *Hub) run(eventChan <-chan Event) {
 			h.disconnectClient(client, h.clients[client])
 		case evt := <-eventChan:
 			eventMsg := append(evt.Json(), messageSeparator...)
-			for _, client := range h.clientsByServer[evt.Server] {
+			for _, client := range h.getClientsSubscribedTo(evt) {
 				if !client.connected {
 					continue
 				}
@@ -100,4 +126,14 @@ func (h *Hub) serveWs(w http.ResponseWriter, r *http.Request) {
 	// new goroutines.
 	go client.writer()
 	go client.readPump()
+}
+
+func (h Hub) getClientsSubscribedTo(evt Event) []*Client {
+	if evt.isDynamic {
+		if instances, found := h.clientsByDynamicServer[evt.Server]; found {
+			return instances[evt.instance]
+		}
+		return []*Client{} // server not found
+	}
+	return h.clientsByServer[evt.Server]
 }

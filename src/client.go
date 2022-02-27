@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"github.com/gorilla/websocket"
 	"log"
 	"time"
@@ -30,7 +29,7 @@ type Client struct {
 	// The Hub the client is connected to
 	hub *Hub
 
-	// The server the client is subscribed to
+	// The server the client is currently subscribed to
 	server string
 
 	// The websocket connection.
@@ -116,12 +115,31 @@ func (c *Client) readPump() {
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		server := string(message)
+		c.handleMessage(string(message))
+	}
+}
+
+func (c *Client) handleMessage(server string) {
+	serverTag, serverId, valid := parseWSServer(server)
+	if valid { // Dynamic server (server=>instance)
+		if instances, found := c.hub.clientsByDynamicServer[serverTag]; found {
+			if clients, found := instances[serverId]; found {
+				c.server = server
+				c.hub.clientsByDynamicServerMutex.Lock()
+				c.hub.clientsByDynamicServer[serverTag][serverId] = append(clients, c)
+				c.hub.clientsByDynamicServerMutex.Unlock()
+				return
+			}
+		}
+	} else { // Classic server
 		if clients, found := c.hub.clientsByServer[server]; found {
 			c.server = server
+			c.hub.clientsByServerMutex.Lock()
 			c.hub.clientsByServer[server] = append(clients, c)
-		} else {
-			fmt.Println("Unknown server:", server)
+			c.hub.clientsByServerMutex.Unlock()
+			return
 		}
 	}
+	debugPrint("Unknown server: " + server)
+	c.send <- append(Event{Type: eventError, Message: "Unknown server: " + server}.Json(), messageSeparator...)
 }
