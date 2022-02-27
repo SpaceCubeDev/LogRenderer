@@ -3,11 +3,64 @@
 <head>
     <title>LogRenderer</title>
 
-    <link rel="icon" href="{{.UrlPrefix}}/res/favicon-png" type="image/png" sizes="any">
+    <link rel="icon" href="{{ .UrlPrefix }}/res/favicon-png" type="image/png" sizes="any">
 
-    <link rel="stylesheet" href="{{.UrlPrefix}}/res/global-css">
+    <link rel="stylesheet" href="{{ .UrlPrefix }}/res/global-css">
 </head>
 <body>
 {{ template "navbar" . -}}
+
+<script>
+    function toggleDynamicDropdown(serverType) {
+        const dropdown = document.querySelector(`nav ul.servers li .dynamic-dropdown[server-type=${serverType}]`);
+        const dropdownContent = dropdown.querySelector(`.dynamic-dropdown-content`);
+        if (dropdown.classList.contains("selected")) {
+            dropdown.classList.remove("selected");
+        } else {
+            if (dropdownContent.childElementCount === 0) {
+                // get server instances
+                console.info("Fetching", serverType, "instances ...");
+                fetch("{{ .UrlPrefix }}/dynamic/?only=" + serverType).then(response => {
+                    if (response.status >= 500) {
+                        console.error("Error while fetching instances of server " + serverType + ":", response.statusText);
+                        return;
+                    }
+                    response.json().then(jsonResponse => {
+                        if (response.status !== 200) {
+                            console.warn("Unexepected response from server:", jsonResponse.message);
+                            return;
+                        }
+                        const instances = jsonResponse.data;
+                        for (const instance in instances) {
+                            // create link to the instance
+                            const a = document.createElement("a");
+                            a.classList.add("dynamic-dropdown-content-link");
+                            a.href = "{{ .UrlPrefix }}/dynamic/" + serverType + "/" + instance;
+                            a.innerText = instances[instance];
+                            dropdownContent.appendChild(a);
+                            // create separator
+                            const hr = document.createElement("hr");
+                            hr.classList.add("dynamic-dropdown-content-hr");
+                            dropdownContent.appendChild(hr);
+                        }
+                    }).catch(reason => {
+                        console.error("Failed to parse response to json:", reason);
+                    });
+                }).catch(reason => {
+                    console.error("Failed to fetch instances of server " + serverType + ":", reason);
+                });
+            }
+            dropdown.classList.add("selected");
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll("nav ul.servers li .dynamic-dropdown").forEach(dropdown => {
+            const serverType = dropdown.getAttribute("server-type");
+            const title = dropdown.querySelector("span.dynamic-dropdown-title");
+            title.addEventListener("click", () => toggleDynamicDropdown(serverType));
+        });
+    });
+</script>
 </body>
 </html>

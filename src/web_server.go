@@ -223,24 +223,9 @@ func dynamicServerHandler(w http.ResponseWriter, r *http.Request, templateCommon
 		return
 	}
 
-	/*logFiles, status := getAllDynamicInstances(dynamicServConfigs, serverTag, false)
-	if status != http.StatusOK {
-		prettier(w, "Internal error: please check the console", nil, int(status))
-		return // TODO: error page
-	}
-	serverInstances, found := logFiles[serverTag]
-	if !found {
-		prettier(w, "Server "+serverTag+" not found !", nil, http.StatusNotFound)
-		return
-	}
-	instanceLogsFilePath, found := serverInstances[serverId]
-	if !found {
-		prettier(w, "Instance "+serverId+" not found !", nil, http.StatusNotFound)
-		return
-	}*/
 	servCfg, logFilePath, found := getDynamicServerConfigAndLogsPath(dynamicServConfigs, serverTag, serverId)
 	if !found {
-		prettier(w, "Instance "+serverId+" not found !", nil, http.StatusNotFound)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	}
 
