@@ -18,7 +18,6 @@
     {{ template "navbar" . -}}
     {{ $urlPrefix := .UrlPrefix }}
     <main>
-        {{- template "archive-loader" . -}}
         <div id="logs" class="logs">
             {{- if not .NoLogsLoadedYet }}
                 {{- range $logLine := .ServerLogs }}
@@ -27,6 +26,7 @@
             {{ end -}}
         </div>
     </main>
+    {{- template "archive-loader" . -}}
 </div>
 <script>
     const searchInput = document.getElementById("search-input");
