@@ -4,6 +4,7 @@
     position: absolute;
     right: 25px;
     top: 50%;
+    transform: translateY(-50%);
     background-color: rgba(55, 55, 55, 0.75);
     cursor: pointer;
 }

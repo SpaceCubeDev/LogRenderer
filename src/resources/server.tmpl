@@ -20,15 +20,15 @@
     {{ template "navbar" . -}}
     {{ $urlPrefix := .UrlPrefix }}
     <main>
-        {{- if .AreArchivedLogsAvailable -}}
-            {{- template "archive-loader" . -}}
-        {{- end }}
         <div id="logs" class="logs">
             {{- range $logLine := .ServerLogs }}
                 <div class="row">{{ $logLine }}</div>
             {{- end -}}
         </div>
     </main>
+    {{- if .AreArchivedLogsAvailable -}}
+        {{- template "archive-loader" . -}}
+    {{- end }}
 </div>
 <script>
     const searchInput = document.getElementById("search-input");

@@ -27,6 +27,7 @@ nav {
     display: flex;
     flex-flow: row nowrap;
     flex: 0 0 auto;
+    z-index: 1;
 }
 
 nav .sc-logo {
