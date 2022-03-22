@@ -12,15 +12,17 @@ import (
 
 var dynamicServerPathRegexp = regexp.MustCompile(`/dynamic/(?P<server>[\w\-.]{1,64})(/(?P<instance>[\w\-.]{1,64}))?`)
 
+type ServerSummary struct {
+	Tag, DisplayName string
+	IsDynamic        bool
+}
+
 // CommonWebData contains data that can be accessed from anywhere and shared between the different pages
 type CommonWebData struct {
-	Version   string
-	ExecDate  string
-	UrlPrefix string
-	Servers   []struct {
-		Tag, DisplayName string
-		IsDynamic        bool
-	}
+	Version          string
+	ExecDate         string
+	UrlPrefix        string
+	Servers          []ServerSummary
 	MessageSeparator template.JS
 
 	/* Archived logs related */
@@ -33,9 +35,15 @@ type handlerFunc func(w http.ResponseWriter, r *http.Request)
 
 // var indexFunctionMap = template.FuncMap{"isServer": func() bool { return false }, "getCurrentServer": func() string { return "" }}
 
-func getFuncMapFor(serv string, isDynamic, isArchive bool) template.FuncMap {
+func getFuncMapFor(serv string, isIndex, isDynamic, isArchive bool) template.FuncMap {
 	isServer := serv != ""
-	return template.FuncMap{"isServer": func() bool { return isServer }, "getCurrentServer": func() string { return serv }, "isDynamic": func() bool { return isDynamic }, "isArchive": func() bool { return isArchive }}
+	return template.FuncMap{
+		"isServer":         func() bool { return isServer },
+		"getCurrentServer": func() string { return serv },
+		"isIndex":          func() bool { return isIndex },
+		"isDynamic":        func() bool { return isDynamic },
+		"isArchive":        func() bool { return isArchive },
+	}
 }
 
 func createLogHandlerFor(servCfg ClassicServerConfig, templateCommonData CommonWebData) handlerFunc {
@@ -54,7 +62,7 @@ func createArchiveHandlerFor(urlPrefix string, servCfg ClassicServerConfig, temp
 			listArchivesHandler(w, templateCommonData, servCfg)
 		case 1:
 			// display archived logs
-			archiveHandler(w, parts[0], templateCommonData, servCfg)
+			archiveHandler(w, r, parts[0], templateCommonData, servCfg)
 		default:
 			http.Redirect(w, r, urlPrefix+"/", http.StatusSeeOther)
 		}
@@ -64,10 +72,7 @@ func createArchiveHandlerFor(urlPrefix string, servCfg ClassicServerConfig, temp
 func startServer(config Config, hub *Hub, outputChannel chan Event) error {
 	go hub.run(outputChannel)
 
-	serverNames := make([]struct {
-		Tag, DisplayName string
-		IsDynamic        bool
-	}, len(config.Servers.Classic)+len(config.Servers.Dynamic))
+	serverNames := make([]ServerSummary, len(config.Servers.Classic)+len(config.Servers.Dynamic))
 	templateCommonData := CommonWebData{
 		Version:          "V" + version,
 		UrlPrefix:        config.UrlPrefix,
@@ -132,8 +137,8 @@ func startServer(config Config, hub *Hub, outputChannel chan Event) error {
 	return http.ListenAndServe(config.getWebServerAddress(), nil)
 }
 
-func indexHandler(w http.ResponseWriter, r *http.Request, templateCommonData CommonWebData) {
-	tmpl, err := parseTemplates([]string{"index", "navbar"}, getFuncMapFor("", false, false))
+func indexHandler(w http.ResponseWriter, _ *http.Request, templateCommonData CommonWebData) {
+	tmpl, err := parseTemplates([]string{"index", "navbar"}, getFuncMapFor("", true, false, false))
 	if err != nil {
 		handleTemplateError(w, tmpl, http.StatusInternalServerError, err)
 		return
@@ -151,25 +156,27 @@ func indexHandler(w http.ResponseWriter, r *http.Request, templateCommonData Com
 }
 
 func serverHandler(w http.ResponseWriter, r *http.Request, templateCommonData CommonWebData, servCfg ClassicServerConfig) {
-	tmpl, err := parseTemplates([]string{"server", "navbar", "archive-loader"}, getFuncMapFor(servCfg.ServerTag, false, false))
+	tmpl, err := parseTemplates([]string{"server", "navbar", "archive-loader"}, getFuncMapFor(servCfg.ServerTag, false, false, false))
 	if err != nil {
 		handleTemplateError(w, tmpl, http.StatusInternalServerError, err)
 		return
 	}
 
-	availableLogs := []string{}
+	availableLogFiles := []string{}
 	if servCfg.archivesEnabled {
-		availableLogs, err = listArchivedLogs(servCfg.ArchiveLogsDirPath, servCfg.ArchiveLogFilenameFormat)
+		availableLogFiles, err = listArchivedLogFiles(servCfg.ArchiveLogsDirPath, servCfg.ArchiveLogFilenameFormat)
 		if err != nil {
 			handleTemplateError(w, tmpl, http.StatusInternalServerError, err)
 			return
 		}
 	}
 
+	maxLines := extractMaxLinesCount(r)
+
 	templateCommonData.ExecDate = time.Now().Format("15:04:05")
 	templateCommonData.AreArchivedLogsAvailable = true
 	templateCommonData.NoLogsLoadedYet = false
-	templateCommonData.AvailableLogsArchives = availableLogs
+	templateCommonData.AvailableLogsArchives = availableLogFiles
 	err = tmpl.Execute(w, struct {
 		CommonWebData
 		Server                    string
@@ -182,7 +189,7 @@ func serverHandler(w http.ResponseWriter, r *http.Request, templateCommonData Co
 		Server:                    servCfg.ServerTag,
 		ServerDisplayName:         servCfg.DisplayName,
 		SyntaxHighlightingRegexps: servCfg.SyntaxHighlightingRegexps,
-		ServerLogs:                getServerLogs(servCfg.LogFilePath),
+		ServerLogs:                getServerLogs(servCfg.LogFilePath, maxLines),
 	})
 	if err != nil {
 		printError(err)
@@ -229,11 +236,14 @@ func dynamicServerHandler(w http.ResponseWriter, r *http.Request, templateCommon
 		return
 	}
 
-	tmpl, err := parseTemplates([]string{"server", "navbar", "archive-loader"}, getFuncMapFor(serverTag, true, false))
+	tmpl, err := parseTemplates([]string{"server", "navbar", "archive-loader"}, getFuncMapFor(serverTag, false, true, false))
 	if err != nil {
 		handleTemplateError(w, tmpl, http.StatusInternalServerError, err)
 		return
 	}
+
+	maxLines := extractMaxLinesCount(r)
+
 	templateCommonData.ExecDate = time.Now().Format("15:04:05")
 	templateCommonData.AreArchivedLogsAvailable = false
 	templateCommonData.NoLogsLoadedYet = false
@@ -250,25 +260,27 @@ func dynamicServerHandler(w http.ResponseWriter, r *http.Request, templateCommon
 		Instance:                  serverId,
 		ServerDisplayName:         strings.ReplaceAll(servCfg.DisplayName, "%id%", serverId),
 		SyntaxHighlightingRegexps: servCfg.SyntaxHighlightingRegexps,
-		ServerLogs:                getServerLogs(logFilePath),
+		ServerLogs:                getServerLogs(logFilePath, maxLines),
 	})
 	if err != nil {
 		printError(err)
 	}
 }
 
-func archiveHandler(w http.ResponseWriter, logFile string, templateCommonData CommonWebData, servCfg ClassicServerConfig) {
-	tmpl, err := parseTemplates([]string{"archive", "navbar", "archive-loader"}, getFuncMapFor(servCfg.ServerTag, false, true))
+func archiveHandler(w http.ResponseWriter, r *http.Request, logFile string, templateCommonData CommonWebData, servCfg ClassicServerConfig) {
+	tmpl, err := parseTemplates([]string{"archive", "navbar", "archive-loader"}, getFuncMapFor(servCfg.ServerTag, false, false, true))
 	if err != nil {
 		handleTemplateError(w, tmpl, http.StatusInternalServerError, err)
 		return
 	}
 
-	availableLogs, err := listArchivedLogs(servCfg.ArchiveLogsDirPath, servCfg.ArchiveLogFilenameFormat)
+	availableLogs, err := listArchivedLogFiles(servCfg.ArchiveLogsDirPath, servCfg.ArchiveLogFilenameFormat)
 	if err != nil {
 		handleTemplateError(w, tmpl, http.StatusInternalServerError, err)
 		return
 	}
+
+	maxLines := extractMaxLinesCount(r)
 
 	templateCommonData.ExecDate = time.Now().Format("15:04:05")
 	templateCommonData.AreArchivedLogsAvailable = true
@@ -285,7 +297,7 @@ func archiveHandler(w http.ResponseWriter, logFile string, templateCommonData Co
 		Server:                    servCfg.ServerTag,
 		ServerDisplayName:         servCfg.DisplayName,
 		SyntaxHighlightingRegexps: servCfg.SyntaxHighlightingRegexps,
-		ServerLogs:                getArchiveLogs(filepath.Join(servCfg.ArchiveLogsDirPath, logFile)),
+		ServerLogs:                getArchiveLogs(filepath.Join(servCfg.ArchiveLogsDirPath, logFile), maxLines),
 	})
 	if err != nil {
 		printError(err)
@@ -293,13 +305,13 @@ func archiveHandler(w http.ResponseWriter, logFile string, templateCommonData Co
 }
 
 func listArchivesHandler(w http.ResponseWriter, templateCommonData CommonWebData, servCfg ClassicServerConfig) {
-	tmpl, err := parseTemplates([]string{"archive", "navbar", "archive-loader"}, getFuncMapFor(servCfg.ServerTag, false, true))
+	tmpl, err := parseTemplates([]string{"archive", "navbar", "archive-loader"}, getFuncMapFor(servCfg.ServerTag, false, false, true))
 	if err != nil {
 		handleTemplateError(w, tmpl, http.StatusInternalServerError, err)
 		return
 	}
 
-	availableLogs, err := listArchivedLogs(servCfg.ArchiveLogsDirPath, servCfg.ArchiveLogFilenameFormat)
+	availableLogs, err := listArchivedLogFiles(servCfg.ArchiveLogsDirPath, servCfg.ArchiveLogFilenameFormat)
 	if err != nil {
 		handleTemplateError(w, tmpl, http.StatusInternalServerError, err)
 		return

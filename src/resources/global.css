@@ -133,6 +133,7 @@ nav ul.servers li .dynamic-dropdown .dynamic-dropdown-content .dynamic-dropdown-
 nav #navbar-right {
     display: flex;
     align-items: center;
+    margin-right: 1em;
 }
 
 nav #navbar-right > span {

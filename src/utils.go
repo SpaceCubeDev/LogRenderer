@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -90,6 +91,15 @@ func prettier(w http.ResponseWriter, message string, data interface{}, status in
 	}
 }
 
+func extractMaxLinesCount(r *http.Request) int {
+	cookie, err := r.Cookie("max-lines-count")
+	if err != nil { // cookie not found
+		return 0
+	}
+	maxLines, _ := strconv.Atoi(cookie.Value)
+	return maxLines
+}
+
 func findAllGroups(re *regexp.Regexp, str string) map[string]string {
 	results := make(map[string]string)
 	matches := re.FindStringSubmatch(str)
@@ -104,16 +114,21 @@ func findAllGroups(re *regexp.Regexp, str string) map[string]string {
 	return results
 }
 
-func getServerLogs(filePath string) []string {
+func getServerLogs(filePath string, limit int) []string {
 	fileContent, err := os.ReadFile(filePath)
 	if err != nil {
 		printError(err)
 		return []string{"Error while reading log file: " + err.Error()}
 	}
-	return strings.Split(string(fileContent), "\n")
+
+	lines := strings.Split(string(fileContent), "\n")
+	if limit > 0 && len(lines) > limit {
+		return lines[len(lines)-limit-1:]
+	}
+	return lines
 }
 
-func listArchivedLogs(logsDirPath, logFilePattern string) ([]string, error) {
+func listArchivedLogFiles(logsDirPath, logFilePattern string) ([]string, error) {
 	entries, err := os.ReadDir(logsDirPath)
 	if err != nil {
 		return []string{}, err
@@ -142,7 +157,7 @@ func listArchivedLogs(logsDirPath, logFilePattern string) ([]string, error) {
 	return validEntries, nil
 }
 
-func getArchiveLogs(logsFilePath string) []string {
+func getArchiveLogs(logsFilePath string, limit int) []string {
 	uncompressed, err := uncompress(logsFilePath)
 	if err != nil {
 		err = errors.New("Error while uncompressing archived log file: " + err.Error())
@@ -150,7 +165,11 @@ func getArchiveLogs(logsFilePath string) []string {
 		return []string{err.Error()}
 	}
 
-	return strings.Split(string(uncompressed), "\n")
+	lines := strings.Split(string(uncompressed), "\n")
+	if limit > 0 && len(lines) > limit {
+		return lines[len(lines)-limit-1:]
+	}
+	return lines
 }
 
 func uncompress(filePath string) ([]byte, error) {

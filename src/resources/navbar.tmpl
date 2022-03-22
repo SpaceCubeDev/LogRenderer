@@ -47,14 +47,15 @@
             </div>
         {{ end -}}
         <div id="navbar-right">
-            {{- if and (isServer) (not isArchive) -}}
-                {{/*<div id="websocket-status-container">
-                    <span id="websocket-status-wave"></span>*/}}
+            {{ if and (isServer) (not isArchive) -}}
                 <span id="websocket-status" title="Websocket status"></span>
-                {{/*</div>*/}}
-            {{- end -}}
+            {{- end }}
             <span id="last-update" title="Last update">{{ .ExecDate }}</span>
-            <span id="version" title="Current LogRenderer version">{{ .Version }}</span>
+            {{ if isIndex -}}
+                <span id="version" title="Current LogRenderer version">{{ .Version }}</span>
+            {{- else -}}
+                <label for="max-lines-count" title="Maximum lines count"><input id="max-lines-count" type="number" min="-1" max="99999"></label>
+            {{- end }}
         </div>
     </nav>
 {{- end }}

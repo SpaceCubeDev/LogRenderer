@@ -61,6 +61,16 @@
     -webkit-animation-iteration-count: infinite;
 }
 
+nav #navbar-right > label[for='max-lines-count'] {
+    max-width: 4em;
+}
+
+nav #navbar-right > label[for='max-lines-count'] > input {
+    max-width: 90%;
+    border: 1px solid white;
+    border-radius: 3px;
+}
+
 main .logs {
     padding: 0.5rem;
     scroll-behavior: smooth;

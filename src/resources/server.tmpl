@@ -32,6 +32,7 @@
 </div>
 <script>
     const searchInput = document.getElementById("search-input");
+    const maxLinesCountInput = document.getElementById("max-lines-count");
     const lastUpdateSpan = document.getElementById("last-update");
     {{- if .AreArchivedLogsAvailable -}}
     const archiveLoaderBackground = document.getElementById("archive-loader-background");
@@ -107,6 +108,14 @@
         }
     }
     {{- end -}}
+
+    function updateWebsocketStatus(alive) {
+        if (alive) {
+            document.getElementById("websocket-status").classList.add("connected");
+        } else {
+            document.getElementById("websocket-status").classList.remove("connected");
+        }
+    }
 
     function handleEvent(data) {
         let event;
@@ -211,18 +220,41 @@
         }
     }
 
-    function updateWebsocketStatus(alive) {
-        if (alive) {
-            document.getElementById("websocket-status").classList.add("connected");
-        } else {
-            document.getElementById("websocket-status").classList.remove("connected");
+    function updateMaxLinesCount() {
+        // Check input validity
+        for (const constraint in maxLinesCountInput.validity) {
+            if (constraint === "valid" ? !maxLinesCountInput.validity[constraint] : maxLinesCountInput.validity[constraint]) {
+                console.warn(constraint);
+                return;
+            }
         }
+        const maxLinesCount = maxLinesCountInput.value;
+        document.cookie = "max-lines-count=" + maxLinesCount + "; SameSite=Strict; path=/";
+    }
+
+    function getMaxLinesNbrCookie() {
+        const regexp = /^.*max-lines-count=(?<max>\d+).*$/;
+        const matches = regexp.exec(decodeURIComponent(document.cookie));
+        if (matches != null) {
+            return matches.groups.max;
+        }
+        return 0;
     }
 
     document.addEventListener("DOMContentLoaded", () => {
         searchInput.value = "";
         searchInput.addEventListener("input", handleSearch);
         searchInput.addEventListener("focusout", scrollToEnd);
+
+        if (document.cookie.includes("max-lines-count=")) {
+            maxLinesCountInput.value = getMaxLinesNbrCookie();
+        }
+        maxLinesCountInput.addEventListener("input", updateMaxLinesCount);
+        maxLinesCountInput.addEventListener("keypress", ev => {
+            if (ev.key === "Enter") { // "Submit"
+                location.reload();
+            }
+        });
 
         document.querySelectorAll("nav ul.servers li .dynamic-dropdown").forEach(dropdown => {
             const serverType = dropdown.getAttribute("server-type");
