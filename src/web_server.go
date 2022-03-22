@@ -138,7 +138,7 @@ func startServer(config Config, hub *Hub, outputChannel chan Event) error {
 }
 
 func indexHandler(w http.ResponseWriter, _ *http.Request, templateCommonData CommonWebData) {
-	tmpl, err := parseTemplates([]string{"index", "navbar"}, getFuncMapFor("", true, false, false))
+	tmpl, err := parseTemplates(getFuncMapFor("", true, false, false), "index", "navbar")
 	if err != nil {
 		handleTemplateError(w, tmpl, http.StatusInternalServerError, err)
 		return
@@ -156,7 +156,7 @@ func indexHandler(w http.ResponseWriter, _ *http.Request, templateCommonData Com
 }
 
 func serverHandler(w http.ResponseWriter, r *http.Request, templateCommonData CommonWebData, servCfg ClassicServerConfig) {
-	tmpl, err := parseTemplates([]string{"server", "navbar", "archive-loader"}, getFuncMapFor(servCfg.ServerTag, false, false, false))
+	tmpl, err := parseTemplates(getFuncMapFor(servCfg.ServerTag, false, false, false), "server", "navbar", "archive-loader", "common-scripts")
 	if err != nil {
 		handleTemplateError(w, tmpl, http.StatusInternalServerError, err)
 		return
@@ -236,7 +236,7 @@ func dynamicServerHandler(w http.ResponseWriter, r *http.Request, templateCommon
 		return
 	}
 
-	tmpl, err := parseTemplates([]string{"server", "navbar", "archive-loader"}, getFuncMapFor(serverTag, false, true, false))
+	tmpl, err := parseTemplates(getFuncMapFor(serverTag, false, true, false), "server", "navbar", "archive-loader", "common-scripts")
 	if err != nil {
 		handleTemplateError(w, tmpl, http.StatusInternalServerError, err)
 		return
@@ -268,7 +268,7 @@ func dynamicServerHandler(w http.ResponseWriter, r *http.Request, templateCommon
 }
 
 func archiveHandler(w http.ResponseWriter, r *http.Request, logFile string, templateCommonData CommonWebData, servCfg ClassicServerConfig) {
-	tmpl, err := parseTemplates([]string{"archive", "navbar", "archive-loader"}, getFuncMapFor(servCfg.ServerTag, false, false, true))
+	tmpl, err := parseTemplates(getFuncMapFor(servCfg.ServerTag, false, false, true), "archive", "navbar", "archive-loader", "common-scripts")
 	if err != nil {
 		handleTemplateError(w, tmpl, http.StatusInternalServerError, err)
 		return
@@ -289,6 +289,7 @@ func archiveHandler(w http.ResponseWriter, r *http.Request, logFile string, temp
 	err = tmpl.Execute(w, struct {
 		CommonWebData
 		Server                    string
+		Instance                  string // just because the field is sometime used in the server template
 		ServerDisplayName         string
 		SyntaxHighlightingRegexps SyntaxHighlightingConfig
 		ServerLogs                []string
@@ -305,7 +306,7 @@ func archiveHandler(w http.ResponseWriter, r *http.Request, logFile string, temp
 }
 
 func listArchivesHandler(w http.ResponseWriter, templateCommonData CommonWebData, servCfg ClassicServerConfig) {
-	tmpl, err := parseTemplates([]string{"archive", "navbar", "archive-loader"}, getFuncMapFor(servCfg.ServerTag, false, false, true))
+	tmpl, err := parseTemplates(getFuncMapFor(servCfg.ServerTag, false, false, true), "archive", "navbar", "archive-loader", "common-scripts")
 	if err != nil {
 		handleTemplateError(w, tmpl, http.StatusInternalServerError, err)
 		return
@@ -324,6 +325,7 @@ func listArchivesHandler(w http.ResponseWriter, templateCommonData CommonWebData
 	err = tmpl.Execute(w, struct {
 		CommonWebData
 		Server                    string
+		Instance                  string // just because the field is sometime used in the server template
 		ServerDisplayName         string
 		SyntaxHighlightingRegexps SyntaxHighlightingConfig
 	}{

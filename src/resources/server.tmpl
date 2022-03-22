@@ -30,85 +30,8 @@
         {{- template "archive-loader" . -}}
     {{- end }}
 </div>
+{{ template "common-scripts" . -}}
 <script>
-    const searchInput = document.getElementById("search-input");
-    const maxLinesCountInput = document.getElementById("max-lines-count");
-    const lastUpdateSpan = document.getElementById("last-update");
-    {{- if .AreArchivedLogsAvailable -}}
-    const archiveLoaderBackground = document.getElementById("archive-loader-background");
-    {{- end }}
-    const logsDiv = document.getElementById("logs");
-
-    const inlineRegexps = {{ .SyntaxHighlightingRegexps }}.reverse();
-
-    const twoDigits = d => d < 10 ? "0" + d : d;
-
-    function handleLineFocus(target) {
-        for (let i = 0; !target.classList.contains("row") && i < 10; i++) {
-            target = target.parentElement;
-        }
-        const line = target;
-        searchInput.value = "";
-        handleSearch();
-        line.classList.add("highlighted");
-        line.scrollIntoView();
-        setTimeout((row) => row.classList.remove("highlighted"), 2000, line);
-    }
-
-    function parseLine(line) {
-        if (line.innerText.length === 0) {
-            return line;
-        }
-        let lineText = line.textContent;
-        for (const highlighter of inlineRegexps) {
-            const field = highlighter.field;
-            const regexp = new RegExp(highlighter.regex, "m");
-            try {
-                if (!regexp.test(lineText)) {
-                    continue;
-                }
-                lineText = lineText.replace(regexp, `<span class="${field}">` + "$&" + "</span>");
-            } catch (error) {
-                console.error(field, regexp, line, error);
-            }
-        }
-        line.innerHTML = lineText;
-        line.addEventListener("click", ev => searchInput.value !== "" ? handleLineFocus(ev.target) : null);
-        return line;
-    }
-
-    function isLogDivFullyScrolled() {
-        return Math.abs((window.scrollY + window.innerHeight - logsDiv.getBoundingClientRect().top - logsDiv.offsetParent.getBoundingClientRect().top) - logsDiv.scrollHeight) < 20;
-    }
-
-    function scrollToEnd() {
-        if (logsDiv.firstElementChild != null) {
-            logsDiv.lastElementChild.scrollIntoView();
-        }
-    }
-
-    {{ if .AreArchivedLogsAvailable -}}
-    function toggleArchiveLoader() {
-        if (archiveLoaderBackground.classList.contains("hidden")) {
-            archiveLoaderBackground.classList.remove("hidden");
-        } else {
-            archiveLoaderBackground.classList.add("hidden");
-        }
-    }
-
-    function submitArchive() {
-        const selector = document.getElementById("archive-selector");
-        if (selector != null) {
-            const value = selector.value;
-            if (value !== "") {
-                window.location.replace("{{ .UrlPrefix }}/archive/{{ getCurrentServer }}/" + value);
-            }
-        } else {
-            console.warn("No input found !");
-        }
-    }
-    {{- end -}}
-
     function updateWebsocketStatus(alive) {
         if (alive) {
             document.getElementById("websocket-status").classList.add("connected");
@@ -159,116 +82,7 @@
         lastUpdateSpan.innerText = `${twoDigits(date.getHours())}:${twoDigits(date.getMinutes())}:${twoDigits(date.getSeconds())}`;
     }
 
-    function handleSearch() {
-        const value = searchInput.value.toLowerCase();
-        if (value === "") {
-            document.querySelectorAll("main .row.hidden").forEach(row => row.classList.remove("hidden"));
-        } else {
-            document.querySelectorAll("main .row").forEach(row => {
-                if (row.textContent.toLowerCase().includes(value)) {
-                    row.classList.remove("hidden");
-                } else {
-                    row.classList.add("hidden");
-                }
-            });
-        }
-    }
-
-    function toggleDynamicDropdown(serverType) {
-        const dropdown = document.querySelector(`nav ul.servers li .dynamic-dropdown[server-type=${serverType}]`);
-        const dropdownContent = dropdown.querySelector(`.dynamic-dropdown-content`);
-        if (dropdown.classList.contains("selected")) {
-            dropdown.classList.remove("selected");
-        } else {
-            if (dropdownContent.childElementCount === 0) {
-                // get server instances
-                console.info("Fetching", serverType, "instances ...");
-                fetch("{{ .UrlPrefix }}/dynamic/?only=" + serverType).then(response => {
-                    if (response.status >= 500) {
-                        console.error("Error while fetching instances of server " + serverType + ":", response.statusText);
-                        return;
-                    }
-                    response.json().then(jsonResponse => {
-                        if (response.status !== 200) {
-                            console.warn("Unexepected response from server:", jsonResponse.message);
-                            return;
-                        }
-                        const instances = jsonResponse.data;
-                        for (const instance in instances) {
-                            // create link to the instance
-                            const a = document.createElement("a");
-                            a.classList.add("dynamic-dropdown-content-link");
-                            if (dropdown.getAttribute("server-type") === {{ .Server }} && instance === {{ .Instance }}) {
-                                a.classList.add("active");
-                            }
-                            a.href = "{{ .UrlPrefix }}/dynamic/" + serverType + "/" + instance;
-                            a.innerText = instances[instance];
-                            dropdownContent.appendChild(a);
-                            // create separator
-                            const hr = document.createElement("hr");
-                            hr.classList.add("dynamic-dropdown-content-hr");
-                            dropdownContent.appendChild(hr);
-                        }
-                    }).catch(reason => {
-                        console.error("Failed to parse response to json:", reason);
-                    });
-                }).catch(reason => {
-                    console.error("Failed to fetch instances of server " + serverType + ":", reason);
-                });
-            }
-            dropdown.classList.add("selected");
-        }
-    }
-
-    function updateMaxLinesCount() {
-        // Check input validity
-        for (const constraint in maxLinesCountInput.validity) {
-            if (constraint === "valid" ? !maxLinesCountInput.validity[constraint] : maxLinesCountInput.validity[constraint]) {
-                console.warn(constraint);
-                return;
-            }
-        }
-        const maxLinesCount = maxLinesCountInput.value;
-        document.cookie = "max-lines-count=" + maxLinesCount + "; SameSite=Strict; path=/";
-    }
-
-    function getMaxLinesNbrCookie() {
-        const regexp = /^.*max-lines-count=(?<max>\d+).*$/;
-        const matches = regexp.exec(decodeURIComponent(document.cookie));
-        if (matches != null) {
-            return matches.groups.max;
-        }
-        return 0;
-    }
-
     document.addEventListener("DOMContentLoaded", () => {
-        searchInput.value = "";
-        searchInput.addEventListener("input", handleSearch);
-        searchInput.addEventListener("focusout", scrollToEnd);
-
-        if (document.cookie.includes("max-lines-count=")) {
-            maxLinesCountInput.value = getMaxLinesNbrCookie();
-        }
-        maxLinesCountInput.addEventListener("input", updateMaxLinesCount);
-        maxLinesCountInput.addEventListener("keypress", ev => {
-            if (ev.key === "Enter") { // "Submit"
-                location.reload();
-            }
-        });
-
-        document.querySelectorAll("nav ul.servers li .dynamic-dropdown").forEach(dropdown => {
-            const serverType = dropdown.getAttribute("server-type");
-            const title = dropdown.querySelector("span.dynamic-dropdown-title");
-            title.addEventListener("click", () => toggleDynamicDropdown(serverType));
-        });
-
-        {{ if .AreArchivedLogsAvailable -}}
-        document.getElementById("archive-loader-trigger").addEventListener("click", toggleArchiveLoader);
-        document.getElementById("archive-loader-background").addEventListener("click", toggleArchiveLoader);
-        document.getElementById("archive-loader").addEventListener("click", ev => ev.stopPropagation());
-        document.getElementById("submit-archive").addEventListener("click", submitArchive);
-        {{- end -}}
-
         if (window["WebSocket"]) {
             const wsProtocol = location.protocol === "https:" ? "wss:" : "ws:";
             const urlPrefix = '{{ $urlPrefix }}';
@@ -312,9 +126,6 @@
             updateWebsocketStatus(false);
             console.error("Your browser does not support WebSockets");
         }
-
-        logsDiv.querySelectorAll("#logs > div.row").forEach(line => parseLine(line));
-        scrollToEnd();
     });
 </script>
 </body>

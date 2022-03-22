@@ -20,14 +20,12 @@ func TestWatcherWrite(t *testing.T) {
 
 	logQueue := fifo.NewQueue()
 
-	go func() { // start the watcher
-		watchServ(logQueue, watchProperties{
-			servName:                  "test-server",
-			logFilePath:               logFilePath,
-			shouldRewatchOnFileRemove: false,
-			delayBeforeRewatch:        0,
-		})
-	}()
+	go watchServ(logQueue, watchProperties{ // start the watcher
+		servName:                  "test-server",
+		logFilePath:               logFilePath,
+		shouldRewatchOnFileRemove: false,
+		delayBeforeRewatch:        0,
+	})
 
 	time.Sleep(time.Millisecond) // time for the watcher to set up
 

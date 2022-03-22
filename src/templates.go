@@ -24,6 +24,9 @@ var navbarHtml string
 //go:embed resources/archive-loader.tmpl
 var archiveLoaderHtml string
 
+//go:embed resources/common-scripts.tmpl
+var commonScriptsJs string
+
 //go:embed resources/global.css
 var globalCss []byte
 
@@ -36,7 +39,7 @@ var archiveCss []byte
 //go:embed resources/favicon.png
 var favicon []byte
 
-func parseTemplates(templateNames []string, funcMap template.FuncMap) (finalTmpl *template.Template, err error) {
+func parseTemplates(funcMap template.FuncMap, templateNames ...string) (finalTmpl *template.Template, err error) {
 	for _, templateName := range templateNames {
 		var templatePtr *string
 
@@ -51,6 +54,8 @@ func parseTemplates(templateNames []string, funcMap template.FuncMap) (finalTmpl
 			templatePtr = &archiveLoaderHtml
 		case "archive":
 			templatePtr = &archiveHtml
+		case "common-scripts":
+			templatePtr = &commonScriptsJs
 		default:
 			err = errors.New("template '" + templateName + "' not found")
 			printError(err)
