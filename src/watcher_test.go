@@ -42,8 +42,7 @@ func TestWatcherWrite(t *testing.T) {
 	}
 
 	if linesCount != logQueue.Len() {
-		t.Errorf("Invalid number of log lines, expected %d got %d.", linesCount, logQueue.Len())
-		t.FailNow()
+		t.Fatalf("Invalid number of log lines, expected %d got %d.", linesCount, logQueue.Len())
 	}
 
 	for i := 0; logQueue.Len() > 0; i++ {

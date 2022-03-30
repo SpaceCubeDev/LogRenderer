@@ -5,4 +5,4 @@
 - Better error handling ...
 - Add archive browsing system for dynamic servers too
 - Add mc server status (https://github.com/PassTheMayo/mcstatus) to home page
-- Make server icons/links configurable
+- Allow cookies from custom website urls

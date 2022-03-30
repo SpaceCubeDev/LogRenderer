@@ -30,12 +30,12 @@ nav {
     z-index: 1;
 }
 
-nav .sc-logo {
+nav .app-logo {
     display: flex;
     align-items: center;
 }
 
-nav .sc-logo a {
+nav .app-logo a {
     margin: 0 1em;
 }
 

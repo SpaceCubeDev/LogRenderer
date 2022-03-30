@@ -36,9 +36,6 @@ var serverCss []byte
 //go:embed resources/archive.css
 var archiveCss []byte
 
-//go:embed resources/favicon.png
-var favicon []byte
-
 func parseTemplates(funcMap template.FuncMap, templateNames ...string) (finalTmpl *template.Template, err error) {
 	for _, templateName := range templateNames {
 		var templatePtr *string
@@ -98,13 +95,10 @@ func serveResource(w http.ResponseWriter, r *http.Request) {
 	case "archive-css":
 		w.Header().Set("Content-Type", "text/css")
 		resourcePtr = &archiveCss
-	case "favicon-png":
-		w.Header().Set("Content-Type", "image/png")
-		resourcePtr = &favicon
 	default:
 		// printError(errors.New("resource '" + resourceName + "' not found"))
 		w.WriteHeader(http.StatusNotFound)
-		fmt.Fprintln(w, "Resource '"+resourceName+"' not found")
+		_, _ = fmt.Fprintln(w, "Resource '"+resourceName+"' not found")
 		return
 	}
 
@@ -126,7 +120,7 @@ func handleTemplateError(w http.ResponseWriter, tmpl *template.Template, statusC
 		ErrorMessage: err.Error(),
 	})
 	if tmplError != nil {
-		exitWithError(tmplError)
+		exitWithError(fmt.Errorf("failed to execute error template: %v", tmplError))
 	}
 }
 

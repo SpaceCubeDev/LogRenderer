@@ -12,16 +12,10 @@ import (
 	"time"
 )
 
-/*type SyntaxHighlightingConfig struct {
-	Time  template.JS `yaml:"time"`
-	Info  template.JS `yaml:"info"`
-	Warn  template.JS `yaml:"warn"`
-	Error template.JS `yaml:"error"`
-	Text  template.JS `yaml:"text"`
-}*/
-
+// serverTagRegexp can be used to check whether a server tag is valid or not
 var serverTagRegexp = regexp.MustCompile(`[\w\-.]{1,64}`)
 
+// SyntaxHighlightingConfig represents the syntax highlighting rules of a server
 type SyntaxHighlightingConfig []struct {
 	Field template.JS `yaml:"field" json:"field"`
 	Regex template.JS `yaml:"regex" json:"regex"`
@@ -70,6 +64,13 @@ type Config struct {
 	// The url prefix of the web interface (e.g. `/logrenderer` if the index of the application is `/logrenderer`). You leave this empty if the index is the root of your website (`/`)
 	UrlPrefix string `yaml:"url-prefix"`
 
+	// The url of the website home
+	WebsiteHomeUrl string `yaml:"website-home-url"`
+	// The url of the website logo
+	WebsiteLogoUrl string `yaml:"website-logo-url"`
+	// The url of the website favicon
+	WebsiteFaviconUrl string `yaml:"website-favicon-url"`
+
 	// Whether debug logs should be printed or not
 	Debug bool `yaml:"debug"`
 
@@ -87,6 +88,7 @@ type Config struct {
 	} `yaml:"servers"`
 }
 
+// getIdentifierFrom looks for the identifier in the given logFilePath using the server identifier regexp
 func (servCfg DynamicServerConfig) getIdentifierFrom(logFilePath string) (id string, found bool) {
 	id = findAllGroups(servCfg.logFileIdentifierRegexp, logFilePath)["id"]
 	return id, id != ""

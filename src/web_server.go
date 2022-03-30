@@ -25,6 +25,13 @@ type CommonWebData struct {
 	Servers          []ServerSummary
 	MessageSeparator template.JS
 
+	// The url of the website home
+	WebsiteHomeUrl string
+	// The url of the website logo
+	WebsiteLogoUrl string
+	// The url of the website favicon
+	WebsiteFaviconUrl string
+
 	/* Archived logs related */
 	AreArchivedLogsAvailable bool
 	NoLogsLoadedYet          bool
@@ -74,10 +81,13 @@ func startServer(config Config, hub *Hub, outputChannel chan Event) error {
 
 	serverNames := make([]ServerSummary, len(config.Servers.Classic)+len(config.Servers.Dynamic))
 	templateCommonData := CommonWebData{
-		Version:          "V" + version,
-		UrlPrefix:        config.UrlPrefix,
-		Servers:          serverNames,
-		MessageSeparator: template.JS(messageSeparator),
+		Version:           "V" + version,
+		UrlPrefix:         config.UrlPrefix,
+		Servers:           serverNames,
+		MessageSeparator:  template.JS(messageSeparator),
+		WebsiteHomeUrl:    config.WebsiteHomeUrl,
+		WebsiteLogoUrl:    config.WebsiteLogoUrl,
+		WebsiteFaviconUrl: config.WebsiteFaviconUrl,
 	}
 
 	var servIndex int

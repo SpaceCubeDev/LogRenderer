@@ -9,6 +9,7 @@ import (
 	"time"
 )
 
+// DynamicServerInstance represents an instance of a dynamic server with its own properties and state
 type DynamicServerInstance struct {
 	id          string
 	displayName string
@@ -16,6 +17,7 @@ type DynamicServerInstance struct {
 	ended       bool
 }
 
+// DynamicServer represents a type of dynamic server with all its instances
 type DynamicServer struct {
 	config    DynamicServerConfig
 	tag       string // shorthand for config.ServerTag
