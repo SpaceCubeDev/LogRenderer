@@ -6,6 +6,12 @@
 port: 8080
 # The url prefix of the web interface (e.g. `/logrenderer` if the index of the application is `/logrenderer`). You can leave this empty if the index is the root of your website (`/`)
 url-prefix: "/logrenderer"
+# The url of the website home
+website-home-url: "https://www.your-website.net"
+# The url of the website logo
+website-logo-url: "https://www.your-website.net/storage/img/your-logo.png"
+# The url of the website favicon
+website-favicon-url: "https://www.your-website.net/storage/img/your-favicon.png"
 # Whether debug logs should be printed or not
 debug: true
 # The delay before a new file watcher is started when a log file is reset/renamed
