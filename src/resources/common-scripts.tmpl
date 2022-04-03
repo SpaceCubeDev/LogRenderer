@@ -150,7 +150,7 @@
                 }
             }
             const maxLinesCount = maxLinesCountInput.value;
-            document.cookie = "max-lines-count=" + maxLinesCount + "; SameSite=Strict; path=/";
+            document.cookie = "max-lines-count=" + maxLinesCount + "; SameSite=Strict; path=/; Secure; max-age=" + (60 * 60 * 24 * 365 * 100);
         }
 
         function getMaxLinesNbrCookie() {
