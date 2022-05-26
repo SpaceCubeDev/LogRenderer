@@ -108,9 +108,9 @@ func serveResource(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func handleTemplateError(w http.ResponseWriter, tmpl *template.Template, statusCode int, err error) {
+func handleTemplateError(w http.ResponseWriter, statusCode int, err error) {
 	printError(err)
-	tmplError := tmpl.Execute(w, struct {
+	tmplError := template.Must(template.New("error").Parse(errorHtml)).Execute(w, struct {
 		ErrorCode    int
 		ErrorStatus  string
 		ErrorMessage string
@@ -124,15 +124,15 @@ func handleTemplateError(w http.ResponseWriter, tmpl *template.Template, statusC
 	}
 }
 
-var errorHtml = `
+const errorHtml = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Error</title>
+    <title>Error {{.ErrorCode}}</title>
 </head>
 <body style="text-align: center">
-	<h1>{{.ErrorCode - .ErrorName}}</h1>
+	<h1>{{.ErrorCode}} - {{.ErrorStatus}}</h1>
 	<hr style="width: 50%"/>
 	<h3>{{.ErrorMessage}}</h3>
 </body>

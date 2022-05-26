@@ -1,3 +1,3 @@
-# LogRenderer [V2.1.3]
+# LogRenderer [V2.2.0]
 
-### Interface web pour la visualisation des logs des serveurs Minecraft/Bungeecord
+### Web interface for log visualization (originally for Minecraft/BungeeCord)

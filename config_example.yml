@@ -48,7 +48,7 @@ servers:
             display-name: "Paper %id%"
             # The pattern of the instances log file, it can contain joker characters like '*'
             log-file-pattern: "/path/to/DynamicServers/Paper_*/logs/latest.log"
-            # The regular expression to extract the instance identifier from the log file path
+            # The regular expression to extract the instance identifier from the log file path, the name of the group must be 'id'
             instance-identifier: ".*/Paper_(?P<id>\\d*)/logs/latest\\.log"
             syntax-highlighting:
                 -   field: "time"

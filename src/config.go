@@ -54,6 +54,12 @@ type DynamicServerConfig struct {
 	InstanceIdentifier string `yaml:"instance-identifier"`
 	// The compiled regexp of the log file identifier
 	logFileIdentifierRegexp *regexp.Regexp
+
+	ArchiveLogsDirPattern string `yaml:"archived-logs-dir-pattern"`
+	// The format of the archived log filenames - only for classic servers
+	ArchiveLogFilenameFormat string `yaml:"archive-log-filename-format"`
+	// Whether archive logs reading is enabled or not
+	archivesEnabled bool
 }
 
 // Config represents the object version of the configuration file
@@ -106,8 +112,8 @@ func (config Config) String() string {
 		str += "\t" + servCfg.ServerTag + ":\n"
 		str += "\t\tdisplay-name: " + servCfg.DisplayName + "\n"
 		str += "\t\tlog-file-path: " + servCfg.LogFilePath + "\n"
-		str += "\t\tarchived-logs-dir-path: " + servCfg.ArchiveLogsDirPath + "\n"
-		str += "\t\tarchived-log-filename-format: " + servCfg.ArchiveLogsDirPath + "\n"
+		str += "\t\tarchived-logs-dir-pattern: " + servCfg.ArchiveLogsDirPath + "\n"
+		str += "\t\tarchived-log-filename-format: " + servCfg.ArchiveLogFilenameFormat + "\n"
 	}
 	str += "dynamic servers:\n"
 	for _, servCfg := range config.Servers.Dynamic {
@@ -115,6 +121,8 @@ func (config Config) String() string {
 		str += "\t\tdisplay-name: " + servCfg.DisplayName + "\n"
 		str += "\t\tlog-file-pattern: " + servCfg.LogFilePattern + "\n"
 		str += "\t\tinstance-identifier: " + servCfg.InstanceIdentifier + "\n"
+		str += "\t\tarchived-logs-dir-pattern: " + servCfg.ArchiveLogsDirPattern + "\n"
+		str += "\t\tarchived-log-filename-format: " + servCfg.ArchiveLogFilenameFormat + "\n"
 	}
 	return str
 }
@@ -215,6 +223,13 @@ func (servCfg *DynamicServerConfig) load(servIndex int) error {
 		return fmt.Errorf("invalid log-file-identifier regexp for server %q: %w", servCfg.ServerTag, err)
 	}
 	servCfg.logFileIdentifierRegexp = re
+
+	servCfg.archivesEnabled = servCfg.ArchiveLogsDirPattern != ""
+	if servCfg.archivesEnabled {
+		if servCfg.ArchiveLogFilenameFormat == "" {
+			return fmt.Errorf("no archive log filename format provided for server %q", servCfg.ServerTag)
+		}
+	}
 
 	return nil
 }

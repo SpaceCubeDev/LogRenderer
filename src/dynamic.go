@@ -43,12 +43,13 @@ func (server DynamicServer) watchForInstances(hub *Hub, outputChannel chan Event
 		if err != nil {
 			printError(fmt.Errorf("failed to find instances of server %q: %v", server.tag, err))
 		} else {
-			for _, instance := range latestInstances {
+			for i := 0; i < len(latestInstances); i++ {
+				instance := latestInstances[i]
 				if _, exists := stillRunning[instance.id]; exists {
 					continue // already watching it
 				}
 				debugPrint(fmt.Sprintf("Found new instance of server %q: %q", server.tag, instance.id))
-				// preserve existing WS connections between instance reboots
+				// preserve existing WS connections between instance's reboots
 				if _, exists := hub.clientsByDynamicServer[server.tag][instance.id]; exists {
 					hub.sendResetMessage(server.tag, instance.id)
 				} else {

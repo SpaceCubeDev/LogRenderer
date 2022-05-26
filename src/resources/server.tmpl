@@ -68,8 +68,8 @@
             case "ADD":
                 if (event["content"] && event["content"].length > 0) {
                     addLine(event["content"]);
-                    if (logsDiv.querySelectorAll("div.row").length > maxLinesCountInput.value) {
-                        logsDiv.removeChild(logsDiv.firstElementChild);
+                    if (maxLinesCountInput.value > 0 && logsDiv.querySelectorAll("div.row").length > maxLinesCountInput.value) {
+                        logsDiv.removeChild(logsDiv.firstElementChild); // Remove oldest line
                     }
                 }
                 break;

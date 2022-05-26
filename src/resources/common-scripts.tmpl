@@ -28,7 +28,11 @@
             if (selector != null) {
                 const value = selector.value;
                 if (value !== "") {
-                    window.location.replace("{{ .UrlPrefix }}/archive/{{ getCurrentServer }}/" + value);
+                    {{ if isDynamic }}
+                        window.location.replace("{{ .UrlPrefix }}/dyn-archive/{{ getCurrentServer }}/{{ .Instance }}/" + value);
+                    {{ else }}
+                        window.location.replace("{{ .UrlPrefix }}/archive/{{ getCurrentServer }}/" + value);
+                    {{ end }}
                 }
             } else {
                 console.warn("No input found !");
