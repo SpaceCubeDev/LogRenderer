@@ -157,15 +157,6 @@ func listArchivedLogFiles(logsDirPath, logFilePattern string) ([]string, error) 
 	return validEntries, nil
 }
 
-func listDynamicArchivedLogFiles(logFilePattern, serverId string) ([]string, error) {
-	logFilePath := strings.ReplaceAll(logFilePattern, "%id%", serverId)
-	logFilesPaths, err := filepath.Glob(logFilePath)
-	if err != nil {
-		return nil, fmt.Errorf("invalid archive log file pattern: %v", err)
-	}
-	return logFilesPaths, nil
-}
-
 func getArchiveLogs(logsFilePath string, limit int) []string {
 	uncompressed, err := uncompress(logsFilePath)
 	if err != nil {
