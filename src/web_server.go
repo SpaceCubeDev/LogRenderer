@@ -202,7 +202,7 @@ func serverHandler(w http.ResponseWriter, r *http.Request, templateCommonData Co
 	maxLines := extractMaxLinesCount(r)
 
 	templateCommonData.ExecDate = time.Now().Format("15:04:05")
-	templateCommonData.AreArchivedLogsAvailable = true
+	templateCommonData.AreArchivedLogsAvailable = servCfg.archivesEnabled
 	templateCommonData.NoLogsLoadedYet = false
 	templateCommonData.AvailableLogsArchives = availableLogFiles
 	err = tmpl.Execute(w, struct {
@@ -284,7 +284,7 @@ func dynamicServerHandler(w http.ResponseWriter, r *http.Request, templateCommon
 	maxLines := extractMaxLinesCount(r)
 
 	templateCommonData.ExecDate = time.Now().Format("15:04:05")
-	templateCommonData.AreArchivedLogsAvailable = true
+	templateCommonData.AreArchivedLogsAvailable = servCfg.archivesEnabled
 	templateCommonData.NoLogsLoadedYet = false
 	templateCommonData.AvailableLogsArchives = availableLogFiles
 	err = tmpl.Execute(w, struct {

@@ -61,7 +61,7 @@ servers:
                     regex: '(?<=(^\[\d{2}:\d{2}:\d{2}]) )\[.{0,30}\/ERROR]'
                 -   field: "content"
                     regex: '(?<=(^\[\d{2}:\d{2}:\d{2}] \[.{0,30}\/(INFO|WARN|ERROR)]: )).*$'
-            # Using '<id>' to include the identifier of the instance identifier
+            # Using '%id%' to include the identifier of the instance identifier
             archived-logs-dir-pattern: "/path/to/DynamicServers/Paper_%id%/logs"
             # The archived log reader supports plain text and gzip plain text files
             archive-log-filename-format: "*.log.gz"
