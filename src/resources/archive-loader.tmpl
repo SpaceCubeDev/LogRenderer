@@ -1,6 +1,6 @@
 {{ define "archive-loader" }}
     {{/* Archive loader modal open button */}}
-    <span id="archive-loader-trigger" {{ if isArchive -}}class="active"{{- end }} title="Toggle archive loader modal">
+    <span id="archive-loader-trigger" {{ if isArchive -}}class="active"{{- end -}} title="Toggle archive loader modal">
         <svg width="752pt" height="752pt" viewBox="0 0 752 752" xmlns="http://www.w3.org/2000/svg">
             <defs>
                 <clipPath id="archive-loader-trigger-svg">
@@ -24,7 +24,7 @@
                 <div class="archive-loader-select--container">
                     <select id="archive-selector">
                         {{- range $archive := .AvailableLogsArchives }}
-                            <option value="{{ $archive }}">{{ $archive }}</option>
+                            <option value="{{ $archive.FullName }}">{{ $archive.Name }} ({{ $archive.Date }})</option>
                         {{- end }}
                     </select>
                 </div>

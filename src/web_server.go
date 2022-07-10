@@ -35,7 +35,7 @@ type CommonWebData struct {
 	/* Archived logs related */
 	AreArchivedLogsAvailable bool
 	NoLogsLoadedYet          bool
-	AvailableLogsArchives    []string
+	AvailableLogsArchives    []archiveEntry
 }
 
 type handlerFunc func(w http.ResponseWriter, r *http.Request)
@@ -190,9 +190,9 @@ func serverHandler(w http.ResponseWriter, r *http.Request, templateCommonData Co
 		return
 	}
 
-	availableLogFiles := []string{}
+	var availableLogFiles []archiveEntry
 	if servCfg.archivesEnabled {
-		availableLogFiles, err = listArchivedLogFiles(servCfg.ArchiveLogsDirPath, servCfg.ArchiveLogFilenameFormat)
+		availableLogFiles, err = listArchivedLogFiles(servCfg.ArchivedLogsDirPath, servCfg.ArchivedLogFilenameFormat)
 		if err != nil {
 			handleTemplateError(w, http.StatusInternalServerError, err)
 			return
@@ -270,10 +270,10 @@ func dynamicServerHandler(w http.ResponseWriter, r *http.Request, templateCommon
 		return
 	}
 
-	availableLogFiles := []string{}
+	var availableLogFiles []archiveEntry
 	if servCfg.archivesEnabled {
-		logsDir := strings.ReplaceAll(servCfg.ArchiveLogsDirPattern, "%id%", serverId)
-		logsFilePattern := strings.ReplaceAll(servCfg.ArchiveLogFilenameFormat, "%id%", serverId)
+		logsDir := strings.ReplaceAll(servCfg.ArchivedLogsRootDir, "%id%", serverId)
+		logsFilePattern := strings.ReplaceAll(servCfg.ArchivedLogsFilePattern, "%id%", serverId)
 		availableLogFiles, err = listArchivedLogFiles(logsDir, logsFilePattern)
 		if err != nil {
 			handleTemplateError(w, http.StatusInternalServerError, err)
@@ -314,7 +314,7 @@ func archiveHandler(w http.ResponseWriter, r *http.Request, logFile string, temp
 		return
 	}
 
-	availableLogs, err := listArchivedLogFiles(servCfg.ArchiveLogsDirPath, servCfg.ArchiveLogFilenameFormat)
+	availableLogs, err := listArchivedLogFiles(servCfg.ArchivedLogsDirPath, servCfg.ArchivedLogFilenameFormat)
 	if err != nil {
 		handleTemplateError(w, http.StatusInternalServerError, err)
 		return
@@ -338,7 +338,7 @@ func archiveHandler(w http.ResponseWriter, r *http.Request, logFile string, temp
 		Server:                    servCfg.ServerTag,
 		ServerDisplayName:         servCfg.DisplayName,
 		SyntaxHighlightingRegexps: servCfg.SyntaxHighlightingRegexps,
-		ServerLogs:                getArchiveLogs(filepath.Join(servCfg.ArchiveLogsDirPath, logFile), maxLines),
+		ServerLogs:                getArchiveLogs(filepath.Join(servCfg.ArchivedLogsDirPath, filePathUnescape(logFile)), maxLines),
 	})
 	if err != nil {
 		printError(err)
@@ -352,8 +352,8 @@ func dynamicArchiveHandler(w http.ResponseWriter, r *http.Request, logFile strin
 		return
 	}
 
-	logsDir := strings.ReplaceAll(servCfg.ArchiveLogsDirPattern, "%id%", serverId)
-	logsFilePattern := strings.ReplaceAll(servCfg.ArchiveLogFilenameFormat, "%id%", serverId)
+	logsDir := strings.ReplaceAll(servCfg.ArchivedLogsRootDir, "%id%", serverId)
+	logsFilePattern := strings.ReplaceAll(servCfg.ArchivedLogsFilePattern, "%id%", serverId)
 	availableLogs, err := listArchivedLogFiles(logsDir, logsFilePattern)
 	if err != nil {
 		handleTemplateError(w, http.StatusInternalServerError, err)
@@ -379,7 +379,7 @@ func dynamicArchiveHandler(w http.ResponseWriter, r *http.Request, logFile strin
 		Instance:                  serverId,
 		ServerDisplayName:         servCfg.DisplayName,
 		SyntaxHighlightingRegexps: servCfg.SyntaxHighlightingRegexps,
-		ServerLogs:                getArchiveLogs(filepath.Join(logsDir, logFile), maxLines),
+		ServerLogs:                getArchiveLogs(filepath.Join(logsDir, filePathUnescape(logFile)), maxLines),
 	})
 	if err != nil {
 		printError(err)
@@ -393,7 +393,7 @@ func listArchivesHandler(w http.ResponseWriter, templateCommonData CommonWebData
 		return
 	}
 
-	availableLogs, err := listArchivedLogFiles(servCfg.ArchiveLogsDirPath, servCfg.ArchiveLogFilenameFormat)
+	availableLogs, err := listArchivedLogFiles(servCfg.ArchivedLogsDirPath, servCfg.ArchivedLogFilenameFormat)
 	if err != nil {
 		handleTemplateError(w, http.StatusInternalServerError, err)
 		return
@@ -427,8 +427,8 @@ func listDynamicArchivesHandler(w http.ResponseWriter, templateCommonData Common
 		return
 	}
 
-	logsDir := strings.ReplaceAll(servCfg.ArchiveLogsDirPattern, "%id%", serverId)
-	logsFilePattern := strings.ReplaceAll(servCfg.ArchiveLogFilenameFormat, "%id%", serverId)
+	logsDir := strings.ReplaceAll(servCfg.ArchivedLogsRootDir, "%id%", serverId)
+	logsFilePattern := strings.ReplaceAll(servCfg.ArchivedLogsFilePattern, "%id%", serverId)
 	availableLogs, err := listArchivedLogFiles(logsDir, logsFilePattern)
 	if err != nil {
 		handleTemplateError(w, http.StatusInternalServerError, err)

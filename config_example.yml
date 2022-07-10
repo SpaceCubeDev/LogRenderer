@@ -23,8 +23,9 @@ servers:
         -   server-tag: "serv_1"
             display-name: "Server 1"
             log-file-path: "/path/to/server_1/logs/latest.log"
-            syntax-highlighting:
+            syntax-highlighting: &spigot # Anchor this syntax highlighting to re-use it in similar servers
                 -   field: "time"
+                    # The JavaScript-style regular expression to select the part of the log line that should inherit of the above CSS class ('time' in this example)
                     regex: '^\[\d{2}:\d{2}:\d{2}]'
                 -   field: "info"
                     regex: '(?<=(^\[\d{2}:\d{2}:\d{2}]) )\[.{0,30}\/INFO]'
@@ -36,32 +37,22 @@ servers:
                     regex: '(?<=(^\[\d{2}:\d{2}:\d{2}] \[.{0,30}\/(INFO|WARN|ERROR)]: )).*$'
             archived-logs-dir-path: "/path/to/server_1/logs"
             # The archived log reader supports plain text and gzip plain text files
-            archive-log-filename-format: "*.log.gz"
+            archived-logs-filename-format: "*.log.gz"
         -   server-tag: "counter"
             display-name: "Counter"
             log-file-path: "~/dir/counter-output.log"
             syntax-highlighting:
                 -   field: "text"
-                    regex: '/.*/'
+                    regex: '.*'
     dynamic:
         -   server-tag: "paper"
             display-name: "Paper %id%"
             # The pattern of the instances log file, it can contain joker characters like '*'
             log-file-pattern: "/path/to/DynamicServers/Paper_*/logs/latest.log"
-            # The regular expression to extract the instance identifier from the log file path, the name of the group must be 'id'
+            # The Golang-style regular expression to extract the instance identifier from the log file path, the name of the group must be 'id'
             instance-identifier: ".*/Paper_(?P<id>\\d*)/logs/latest\\.log"
-            syntax-highlighting:
-                -   field: "time"
-                    regex: '^\[\d{2}:\d{2}:\d{2}]'
-                -   field: "info"
-                    regex: '(?<=(^\[\d{2}:\d{2}:\d{2}]) )\[.{0,30}\/INFO]'
-                -   field: "warn"
-                    regex: '(?<=(^\[\d{2}:\d{2}:\d{2}]) )\[.{0,30}\/WARN]'
-                -   field: "error"
-                    regex: '(?<=(^\[\d{2}:\d{2}:\d{2}]) )\[.{0,30}\/ERROR]'
-                -   field: "content"
-                    regex: '(?<=(^\[\d{2}:\d{2}:\d{2}] \[.{0,30}\/(INFO|WARN|ERROR)]: )).*$'
+            syntax-highlighting: *spigot # Re-use of serv_1's syntax highlighting
             # Using '%id%' to include the identifier of the instance identifier
-            archived-logs-dir-pattern: "/path/to/DynamicServers/Paper_%id%/logs"
+            archived-logs-root-dir: "/path/to/DynamicServers/Paper_%id%/logs"
             # The archived log reader supports plain text and gzip plain text files
-            archive-log-filename-format: "*.log.gz"
+            archived-logs-file-pattern: "*.log.gz"

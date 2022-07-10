@@ -1,18 +1,16 @@
 package main
 
 import (
-	"compress/gzip"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -73,15 +71,15 @@ func prefix(servName string, endingSpace bool) string {
 	return fmt.Sprintf("[%s]%s", servName, space)
 }
 
-func prettier(w http.ResponseWriter, message string, data interface{}, status int) {
+func prettier(w http.ResponseWriter, message string, data any, status int) {
 	if data == nil {
 		data = struct{}{}
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	err := json.NewEncoder(w).Encode(struct {
-		Message string      `json:"message"`
-		Data    interface{} `json:"data"`
+		Message string `json:"message"`
+		Data    any    `json:"data"`
 	}{
 		Message: message,
 		Data:    data,
@@ -114,96 +112,21 @@ func findAllGroups(re *regexp.Regexp, str string) map[string]string {
 	return results
 }
 
-func getServerLogs(filePath string, limit int) []string {
-	fileContent, err := os.ReadFile(filePath)
-	if err != nil {
-		printError(err)
-		return []string{"Error while reading log file: " + err.Error()}
-	}
-
-	lines := strings.Split(string(fileContent), "\n")
-	if limit > 0 && len(lines) > limit {
-		return lines[len(lines)-limit-1:]
-	}
-	return lines
+// filePathEscape encodes the given file path into base64, and then makes it url-friendly
+func filePathEscape(filePath string) string {
+	return url.QueryEscape(base64.StdEncoding.EncodeToString([]byte(filePath)))
 }
 
-func listArchivedLogFiles(logsDirPath, logFilePattern string) ([]string, error) {
-	entries, err := os.ReadDir(logsDirPath)
+func filePathUnescape(filePath string) string {
+	unescaped, err := url.QueryUnescape(filePath)
 	if err != nil {
-		return []string{}, err // TODO is not exist special case
+		log.Println("Failed to unescape string:", err)
+		return ""
 	}
-
-	var validEntries []string
-
-	for _, entry := range entries {
-		if entry.IsDir() {
-			continue
-		}
-
-		match, err := filepath.Match(logFilePattern, entry.Name())
-		if err != nil {
-			return []string{}, err
-		}
-		if match {
-			validEntries = append(validEntries, entry.Name())
-		}
-	}
-
-	for i, j := 0, len(validEntries)-1; i < j; i, j = i+1, j-1 {
-		validEntries[i], validEntries[j] = validEntries[j], validEntries[i]
-	}
-
-	return validEntries, nil
-}
-
-func getArchiveLogs(logsFilePath string, limit int) []string {
-	uncompressed, err := uncompress(logsFilePath)
+	decoded, err := base64.StdEncoding.DecodeString(unescaped)
 	if err != nil {
-		err = errors.New("Error while uncompressing archived log file: " + err.Error())
-		printError(err)
-		return []string{err.Error()}
+		log.Println("Failed to decode base64:", err)
+		return ""
 	}
-
-	lines := strings.Split(string(uncompressed), "\n")
-	if limit > 0 && len(lines) > limit {
-		return lines[len(lines)-limit-1:]
-	}
-	return lines
-}
-
-func uncompress(filePath string) ([]byte, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	buf := make([]byte, 512)
-	n, err := file.Read(buf)
-	if err != nil {
-		return nil, err
-	}
-	_, err = file.Seek(0, 0)
-	if err != nil {
-		return nil, errors.New("failed to seek archived log file: " + err.Error())
-	}
-
-	contentType := http.DetectContentType(buf[:n])
-	if i := strings.Index(contentType, ";"); i >= 0 {
-		contentType = contentType[:i]
-	}
-
-	switch contentType {
-	case "text/plain":
-		return io.ReadAll(file)
-	case "application/x-gzip":
-		gzReader, err := gzip.NewReader(file)
-		if err != nil {
-			return nil, err
-		}
-		return io.ReadAll(gzReader)
-	default:
-		return io.ReadAll(file)
-	}
+	return string(decoded)
 }
