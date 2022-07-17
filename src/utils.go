@@ -14,6 +14,8 @@ import (
 	"time"
 )
 
+const defaultMaxLinesCount = 500
+
 func printError(err error) {
 	fmt.Println("\n/!\\    Error    /!\\")
 	fmt.Println(time.Now().Format("2006-01-02 15:04:05"))
@@ -95,6 +97,10 @@ func extractMaxLinesCount(r *http.Request) int {
 		return 0
 	}
 	maxLines, _ := strconv.Atoi(cookie.Value)
+	if maxLines == 0 {
+		cookie.Value = strconv.Itoa(defaultMaxLinesCount)
+		return defaultMaxLinesCount
+	}
 	return maxLines
 }
 
