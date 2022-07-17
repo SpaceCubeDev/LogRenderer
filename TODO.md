@@ -1,6 +1,5 @@
 # TODO list
 
-- Cap max lines count (40k lines => some lags)
 - Add css configuration for template injection to add custom fields. Maybe in its own file ?
 - Better error handling ...
 - Allow cookies from custom website urls

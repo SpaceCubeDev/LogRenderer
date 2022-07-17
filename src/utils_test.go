@@ -17,7 +17,6 @@ func TestMaxLineCountExtraction(t *testing.T) {
 			maxLinesCountChan <- extractMaxLinesCount(r)
 		})
 		t.Error(http.ListenAndServe(addr, nil))
-		return
 	}()
 	time.Sleep(100 * time.Millisecond)
 
