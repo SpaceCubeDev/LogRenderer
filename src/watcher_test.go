@@ -29,7 +29,8 @@ func TestWatcherWrite(t *testing.T) {
 
 	time.Sleep(time.Millisecond) // time for the watcher to set up
 
-	linesCount := rand.Intn(990) + 10 // generate between 10 and 1000 lines of log
+	linesCount := rand.Intn(990) + 10 // generates between 10 and 1000 lines of log
+	t.Logf("Testing with %d lines ...", linesCount)
 	lines := make([]string, linesCount)
 	for i := 0; i < linesCount; i++ {
 		line := generateLogLine()
@@ -38,7 +39,7 @@ func TestWatcherWrite(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to write logs to file: %v", err)
 		}
-		time.Sleep(time.Millisecond) // so as not to write too fast
+		time.Sleep(3 * time.Millisecond) // so as not to write too fast
 	}
 
 	if linesCount != logQueue.Len() {
