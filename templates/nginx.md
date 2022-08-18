@@ -10,9 +10,9 @@ syntax-highlighting:
     -   field: "info"
         regex: '^(\d{1,3}\.){3}\d{1,3}'
     -   field: "time"
-        regex: '(?<=(^(\d{1,3}\.){3}\d{1,3}\s-\s-\s))\[\d{1,2}\/\w{1,15}\/\d{4}(:\d{2}){3}\s\+\d{4}\]'
+        regex: '(?<=(^(\d{1,3}\.){3}\d{1,3}\s-\s(-|[\w-]+)\s))\[\d{1,2}\/\w{1,15}\/\d{4}(:\d{2}){3}\s\+\d{4}\]'
     -   field: "content"
-        regex: '(?<=(^(\d{1,3}\.){3}\d{1,3}\s-\s-\s\[\d{1,2}\/\w{1,15}\/\d{4}(:\d{2}){3}\s\+\d{4}\]\s)).+$'
+        regex: '(?<=(^(\d{1,3}\.){3}\d{1,3}\s-\s(-|[\w-]+)\s\[\d{1,2}\/\w{1,15}\/\d{4}(:\d{2}){3}\s\+\d{4}\]\s)).+$'
 archived-logs-dir-path: "/var/log/nginx"
 archive-log-filename-format: "access.log.*"
 ```
