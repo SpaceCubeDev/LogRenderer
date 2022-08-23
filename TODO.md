@@ -1,6 +1,6 @@
 # TODO list
 
-- Add css configuration for template injection to add custom fields. Maybe in its own file ? => change nginx template "info" field
+- Update templates (like changing nginx template "info" field)
 - Better error handling ...
 - Allow cookies from custom website urls
 - Change "classic" to "static"
