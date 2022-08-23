@@ -8,6 +8,7 @@
         const logsDiv = document.getElementById("logs");
 
         const inlineRegexps = {{ .SyntaxHighlightingRegexps }}.reverse();
+        const logsStyles = {{ .LogsStyles }};
 
         const twoDigits = d => d < 10 ? "0" + d : d;
         {{- if .AreArchivedLogsAvailable -}}
@@ -64,7 +65,12 @@
                     if (!regexp.test(lineText)) {
                         continue;
                     }
-                    lineText = lineText.replace(regexp, `<span class="${field}">` + "$&" + "</span>");
+                    const style = logsStyles[field];
+                    if (style) {
+                        lineText = lineText.replace(regexp, `<span style="${style}">` + "$&" + "</span>");
+                    } else {
+                        lineText = lineText.replace(regexp, "<span>" + "$&" + "</span>");
+                    }
                 } catch (error) {
                     console.error(field, regexp, line, error);
                 }

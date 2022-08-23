@@ -80,7 +80,7 @@ main .logs .row {
     white-space: break-spaces;
 }
 
-main .logs .row .time {
+/*main .logs .row .time {
     color: #65a6dd;
 }
 
@@ -98,7 +98,7 @@ main .logs .row .error {
 
 main .logs .row.error {
     background-color: #631515;
-}
+}*/
 
 main .logs .row.hidden {
     display: none;

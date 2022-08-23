@@ -38,6 +38,16 @@ type CommonWebData struct {
 	AvailableLogsArchives    []archiveEntry
 }
 
+// ServerWebData contains data common to every server page
+type ServerWebData struct {
+	Server                    string
+	Instance                  string // always included because the field is sometime used in the server template
+	ServerDisplayName         string
+	SyntaxHighlightingRegexps SyntaxHighlightingConfig
+	LogsStyles                map[string]string
+	ServerLogs                []string
+}
+
 type handlerFunc func(w http.ResponseWriter, r *http.Request)
 
 // var indexFunctionMap = template.FuncMap{"isServer": func() bool { return false }, "getCurrentServer": func() string { return "" }}
@@ -207,17 +217,16 @@ func serverHandler(w http.ResponseWriter, r *http.Request, templateCommonData Co
 	templateCommonData.AvailableLogsArchives = availableLogFiles
 	err = tmpl.Execute(w, struct {
 		CommonWebData
-		Server                    string
-		Instance                  string // just because the field is sometime used in the server template
-		ServerDisplayName         string
-		SyntaxHighlightingRegexps SyntaxHighlightingConfig
-		ServerLogs                []string
+		ServerWebData
 	}{
-		CommonWebData:             templateCommonData,
-		Server:                    servCfg.ServerTag,
-		ServerDisplayName:         servCfg.DisplayName,
-		SyntaxHighlightingRegexps: servCfg.SyntaxHighlightingRegexps,
-		ServerLogs:                getServerLogs(servCfg.LogFilePath, maxLines),
+		CommonWebData: templateCommonData,
+		ServerWebData: ServerWebData{
+			Server:                    servCfg.ServerTag,
+			ServerDisplayName:         servCfg.DisplayName,
+			SyntaxHighlightingRegexps: servCfg.SyntaxHighlightingRegexps,
+			LogsStyles:                *servCfg.styles,
+			ServerLogs:                getServerLogs(servCfg.LogFilePath, maxLines),
+		},
 	})
 	if err != nil {
 		printError(err)
@@ -289,18 +298,17 @@ func dynamicServerHandler(w http.ResponseWriter, r *http.Request, templateCommon
 	templateCommonData.AvailableLogsArchives = availableLogFiles
 	err = tmpl.Execute(w, struct {
 		CommonWebData
-		Server                    string
-		Instance                  string
-		ServerDisplayName         string
-		SyntaxHighlightingRegexps SyntaxHighlightingConfig
-		ServerLogs                []string
+		ServerWebData
 	}{
-		CommonWebData:             templateCommonData,
-		Server:                    servCfg.ServerTag,
-		Instance:                  serverId,
-		ServerDisplayName:         strings.ReplaceAll(servCfg.DisplayName, "%id%", serverId),
-		SyntaxHighlightingRegexps: servCfg.SyntaxHighlightingRegexps,
-		ServerLogs:                getServerLogs(logFilePath, maxLines),
+		CommonWebData: templateCommonData,
+		ServerWebData: ServerWebData{
+			Server:                    servCfg.ServerTag,
+			Instance:                  serverId,
+			ServerDisplayName:         strings.ReplaceAll(servCfg.DisplayName, "%id%", serverId),
+			SyntaxHighlightingRegexps: servCfg.SyntaxHighlightingRegexps,
+			LogsStyles:                *servCfg.styles,
+			ServerLogs:                getServerLogs(logFilePath, maxLines),
+		},
 	})
 	if err != nil {
 		printError(err)
@@ -328,17 +336,16 @@ func archiveHandler(w http.ResponseWriter, r *http.Request, logFile string, temp
 	templateCommonData.AvailableLogsArchives = availableLogs
 	err = tmpl.Execute(w, struct {
 		CommonWebData
-		Server                    string
-		Instance                  string // just because the field is sometime used in the server template
-		ServerDisplayName         string
-		SyntaxHighlightingRegexps SyntaxHighlightingConfig
-		ServerLogs                []string
+		ServerWebData
 	}{
-		CommonWebData:             templateCommonData,
-		Server:                    servCfg.ServerTag,
-		ServerDisplayName:         servCfg.DisplayName,
-		SyntaxHighlightingRegexps: servCfg.SyntaxHighlightingRegexps,
-		ServerLogs:                getArchiveLogs(filepath.Join(servCfg.ArchivedLogsDirPath, filePathUnescape(logFile)), maxLines),
+		CommonWebData: templateCommonData,
+		ServerWebData: ServerWebData{
+			Server:                    servCfg.ServerTag,
+			ServerDisplayName:         servCfg.DisplayName,
+			SyntaxHighlightingRegexps: servCfg.SyntaxHighlightingRegexps,
+			LogsStyles:                *servCfg.styles,
+			ServerLogs:                getArchiveLogs(filepath.Join(servCfg.ArchivedLogsDirPath, filePathUnescape(logFile)), maxLines),
+		},
 	})
 	if err != nil {
 		printError(err)
@@ -368,18 +375,17 @@ func dynamicArchiveHandler(w http.ResponseWriter, r *http.Request, logFile strin
 	templateCommonData.AvailableLogsArchives = availableLogs
 	err = tmpl.Execute(w, struct {
 		CommonWebData
-		Server                    string
-		Instance                  string
-		ServerDisplayName         string
-		SyntaxHighlightingRegexps SyntaxHighlightingConfig
-		ServerLogs                []string
+		ServerWebData
 	}{
-		CommonWebData:             templateCommonData,
-		Server:                    servCfg.ServerTag,
-		Instance:                  serverId,
-		ServerDisplayName:         servCfg.DisplayName,
-		SyntaxHighlightingRegexps: servCfg.SyntaxHighlightingRegexps,
-		ServerLogs:                getArchiveLogs(filepath.Join(logsDir, filePathUnescape(logFile)), maxLines),
+		CommonWebData: templateCommonData,
+		ServerWebData: ServerWebData{
+			Server:                    servCfg.ServerTag,
+			Instance:                  serverId,
+			ServerDisplayName:         servCfg.DisplayName,
+			SyntaxHighlightingRegexps: servCfg.SyntaxHighlightingRegexps,
+			LogsStyles:                *servCfg.styles,
+			ServerLogs:                getArchiveLogs(filepath.Join(logsDir, filePathUnescape(logFile)), maxLines),
+		},
 	})
 	if err != nil {
 		printError(err)
@@ -405,15 +411,15 @@ func listArchivesHandler(w http.ResponseWriter, templateCommonData CommonWebData
 	templateCommonData.AvailableLogsArchives = availableLogs
 	err = tmpl.Execute(w, struct {
 		CommonWebData
-		Server                    string
-		Instance                  string // just because the field is sometime used in the server template
-		ServerDisplayName         string
-		SyntaxHighlightingRegexps SyntaxHighlightingConfig
+		ServerWebData
 	}{
-		CommonWebData:             templateCommonData,
-		Server:                    servCfg.ServerTag,
-		ServerDisplayName:         servCfg.DisplayName,
-		SyntaxHighlightingRegexps: servCfg.SyntaxHighlightingRegexps,
+		CommonWebData: templateCommonData,
+		ServerWebData: ServerWebData{
+			Server:                    servCfg.ServerTag,
+			ServerDisplayName:         servCfg.DisplayName,
+			SyntaxHighlightingRegexps: servCfg.SyntaxHighlightingRegexps,
+			LogsStyles:                *servCfg.styles,
+		},
 	})
 	if err != nil {
 		printError(err)
@@ -441,16 +447,16 @@ func listDynamicArchivesHandler(w http.ResponseWriter, templateCommonData Common
 	templateCommonData.AvailableLogsArchives = availableLogs
 	err = tmpl.Execute(w, struct {
 		CommonWebData
-		Server                    string
-		Instance                  string
-		ServerDisplayName         string
-		SyntaxHighlightingRegexps SyntaxHighlightingConfig
+		ServerWebData
 	}{
-		CommonWebData:             templateCommonData,
-		Server:                    servCfg.ServerTag,
-		Instance:                  serverId,
-		ServerDisplayName:         servCfg.DisplayName,
-		SyntaxHighlightingRegexps: servCfg.SyntaxHighlightingRegexps,
+		CommonWebData: templateCommonData,
+		ServerWebData: ServerWebData{
+			Server:                    servCfg.ServerTag,
+			Instance:                  serverId,
+			ServerDisplayName:         servCfg.DisplayName,
+			SyntaxHighlightingRegexps: servCfg.SyntaxHighlightingRegexps,
+			LogsStyles:                *servCfg.styles,
+		},
 	})
 	if err != nil {
 		printError(err)

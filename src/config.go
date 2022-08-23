@@ -30,6 +30,8 @@ type ServerConfig struct {
 	DisplayName string `yaml:"display-name"`
 	// The regexps for the syntax highlighting for the logs of this server
 	SyntaxHighlightingRegexps SyntaxHighlightingConfig `yaml:"syntax-highlighting"`
+	// A pointer to the logs style dictionnary
+	styles *map[string]string
 }
 
 type ClassicServerConfig struct {
@@ -86,6 +88,11 @@ type Config struct {
 	// The real value of DelayBeforeRewatch
 	delayBeforeRewatch time.Duration
 
+	// The path of the file containing the logs style rules
+	StyleFilePath string `yaml:"style-file-path"`
+	// The styles as a map like name:css
+	styles map[string]string
+
 	// All the servers to list and listen to logs
 	Servers struct {
 		// The classic servers, whose log file path is static
@@ -108,6 +115,7 @@ func (config Config) String() string {
 	str += fmt.Sprintf("url-prefix: %s\n", config.UrlPrefix)
 	str += fmt.Sprintf("debug: %t\n", config.Debug)
 	str += fmt.Sprintf("delay-before-rewatch: %s\n", config.delayBeforeRewatch)
+	str += fmt.Sprintf("style-file-path: %s\n", config.StyleFilePath)
 	str += "classic servers:\n"
 	for _, servCfg := range config.Servers.Classic {
 		str += "\t" + servCfg.ServerTag + ":\n"
@@ -160,35 +168,60 @@ func loadConfigFrom(configPath string) (Config, error) {
 
 	delay, err := time.ParseDuration(config.DelayBeforeRewatch)
 	if err != nil {
-		return Config{}, fmt.Errorf("failed to parse delay-before-rewatch: %v", err)
+		return Config{}, fmt.Errorf("failed to parse delay-before-rewatch: %w", err)
 	}
 	if delay < 0 {
 		return Config{}, errors.New("the delay-before-rewatch cannot be negative")
 	}
 	config.delayBeforeRewatch = delay
 
+	config.styles, err = loadStyles(config.StyleFilePath)
+	if err != nil {
+		return Config{}, fmt.Errorf("failed to load log styles file: %w", err)
+	}
+
 	if len(config.Servers.Classic) == 0 && len(config.Servers.Dynamic) == 0 {
 		return Config{}, errors.New("no server found")
 	}
 
-	for servIndex, servCfg := range config.Servers.Classic {
+	for servIndex := range config.Servers.Classic {
+		servCfg := config.Servers.Classic[servIndex]
 		err = servCfg.load(servIndex)
 		if err != nil {
 			return Config{}, err
 		}
+		servCfg.styles = &config.styles
 
 		config.Servers.Classic[servIndex] = servCfg
 	}
-	for servIndex, servCfg := range config.Servers.Dynamic {
+	for servIndex := range config.Servers.Dynamic {
+		servCfg := config.Servers.Dynamic[servIndex]
 		err = servCfg.load(servIndex)
 		if err != nil {
 			return Config{}, err
 		}
+		servCfg.styles = &config.styles
 
 		config.Servers.Dynamic[servIndex] = servCfg
 	}
 
 	return config, nil
+}
+
+// loadStyles loads the logs styles declared in the file at the given path
+func loadStyles(styleFilePath string) (map[string]string, error) {
+	fileBytes, err := os.ReadFile(styleFilePath)
+	if err != nil {
+		return nil, err
+	}
+
+	var styles map[string]string
+	err = yaml.Unmarshal(fileBytes, &styles)
+	if err != nil {
+		return nil, err
+	}
+
+	return styles, nil
 }
 
 func (servCfg *ClassicServerConfig) load(servIndex int) error {

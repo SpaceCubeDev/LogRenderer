@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-const version = "2.2.3"
+const version = "2.2.4"
 
 const instancesRefreshIntervalPerServer = 2 * time.Second
 
@@ -20,7 +20,7 @@ func main() {
 
 	fmt.Print("\nStarting LogRenderer V"+version, " ...\n")
 
-	configPath := flag.String("config", "", "the path to the configuration file")
+	configPath := flag.String("config", "./config.yml", "the path to the configuration file")
 	flag.Parse()
 
 	if *configPath == "" {

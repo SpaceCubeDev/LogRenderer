@@ -129,7 +129,7 @@ func (hub *Hub) serveWs(w http.ResponseWriter, r *http.Request) {
 	go client.readPump()
 }
 
-func (hub Hub) getClientsSubscribedTo(evt Event) []*Client {
+func (hub *Hub) getClientsSubscribedTo(evt Event) []*Client {
 	if evt.isDynamic {
 		if instances, found := hub.clientsByDynamicServer[evt.Server]; found {
 			return instances[evt.instance]
