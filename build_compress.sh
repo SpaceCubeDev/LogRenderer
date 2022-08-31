@@ -26,6 +26,6 @@ fi
 
 echo "Building the app (v$VERSION)$STATIC_MSG ..."
 
-(cd src && go build -ldflags="-X 'main.version=$VERSION'$STATIC"$TAGS -o $BINARY_FILENAME && strip $BINARY_FILENAME && xz $BINARY_FILENAME && mv "$BINARY_FILENAME.xz" ../$OUTPUT_DIR) # Statically linked
+(cd src && go build -ldflags="-X 'main.version=$VERSION'$STATIC"$TAGS -o $BINARY_FILENAME && strip $BINARY_FILENAME && xz $BINARY_FILENAME && mv "$BINARY_FILENAME.xz" ../$OUTPUT_DIR)
 
 echo "Successfully exported $BINARY_FILENAME to $OUTPUT_DIR/$BINARY_FILENAME.xz !"
