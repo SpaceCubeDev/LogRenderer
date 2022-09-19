@@ -9,6 +9,8 @@ log-file-path: "/var/log/nginx/access.log"
 syntax-highlighting:
     -   field: "info"
         regex: '^(\d{1,3}\.){3}\d{1,3}'
+    -   field: "user"
+        regex: '(?<=(^(\d{1,3}\.){3}\d{1,3}\s-\s))[\w]+'
     -   field: "time"
         regex: '(?<=(^(\d{1,3}\.){3}\d{1,3}\s-\s(-|[\w-]+)\s))\[\d{1,2}\/\w{1,15}\/\d{4}(:\d{2}){3}\s\+\d{4}\]'
     -   field: "content"
@@ -29,6 +31,8 @@ syntax-highlighting:
     -   field: "warn"
         regex: '(?<=^\d{4}\/\d{2}\/\d{2}\s\d{2}:\d{2}:\d{2}\s)\[warn]'
     -   field: "error"
+        regex: '(?<=^\d{4}\/\d{2}\/\d{2}\s\d{2}:\d{2}:\d{2}\s)\[error]'
+    -   field: "critical"
         regex: '(?<=^\d{4}\/\d{2}\/\d{2}\s\d{2}:\d{2}:\d{2}\s)\[crit]'
     -   field: "content"
         regex: '(?<=^\d{4}\/\d{2}\/\d{2}\s\d{2}:\d{2}:\d{2}\s\[\w+]\s\d+#\d+:\s).*$'

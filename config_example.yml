@@ -27,7 +27,7 @@ servers:
             log-file-path: "/path/to/server_1/logs/latest.log"
             syntax-highlighting: &spigot # Anchor this syntax highlighting to re-use it in similar servers
                 -   field: "time"
-                    # The JavaScript-style regular expression to select the part of the log line that should inherit of the above CSS class ('time' in this example)
+                    # JavaScript-style regular expression to select the part of the log line that should inherit of the above CSS class ('time' in this example)
                     regex: '^\[\d{2}:\d{2}:\d{2}]'
                 -   field: "info"
                     regex: '(?<=(^\[\d{2}:\d{2}:\d{2}]) )\[.{0,30}\/INFO]'

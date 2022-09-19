@@ -25,6 +25,7 @@
                 <div class="row">{{ $logLine }}</div>
             {{- end -}}
         </div>
+        <span id="scroll-to-bottom" title="Scroll to bottom">&downarrow;</span>
     </main>
     {{- if .AreArchivedLogsAvailable -}}
         {{- template "archive-loader" . -}}

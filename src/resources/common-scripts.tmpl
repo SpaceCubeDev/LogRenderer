@@ -30,9 +30,9 @@
                 const value = selector.value;
                 if (value !== "") {
                     {{- if isDynamic }}
-                        window.location.replace("{{ .UrlPrefix }}/dyn-archive/{{ getCurrentServer }}/{{ .Instance }}/" + value);
+                    window.location.replace("{{ .UrlPrefix }}/dyn-archive/{{ getCurrentServer }}/{{ .Instance }}/" + value);
                     {{- else -}}
-                        window.location.replace("{{ .UrlPrefix }}/archive/{{ getCurrentServer }}/" + value);
+                    window.location.replace("{{ .UrlPrefix }}/archive/{{ getCurrentServer }}/" + value);
                     {{ end -}}
                 }
             } else {
@@ -40,6 +40,16 @@
             }
         }
         {{- end -}}
+
+        function debounce(func, timeout) {
+            let timer;
+            return (...args) => {
+                clearTimeout(timer);
+                timer = setTimeout(() => {
+                    func.apply(this, args);
+                }, timeout);
+            };
+        }
 
         function handleLineFocus(target) {
             for (let i = 0; !target.classList.contains("row") && i < 10; i++) {
@@ -85,9 +95,7 @@
         }
 
         function scrollToEnd() {
-            if (logsDiv.firstElementChild != null) {
-                logsDiv.lastElementChild.scrollIntoView();
-            }
+            logsDiv.lastElementChild?.scrollIntoView();
         }
 
         function handleSearch() {
@@ -193,6 +201,19 @@
             document.getElementById("archive-loader").addEventListener("click", ev => ev.stopPropagation());
             document.getElementById("submit-archive").addEventListener("click", submitArchive);
             {{- end -}}
+
+            const scrollToBottomBtn = document.getElementById("scroll-to-bottom");
+            if (scrollToBottomBtn) {
+                scrollToBottomBtn.addEventListener("click", scrollToEnd);
+                logsDiv.parentElement.addEventListener("scroll", debounce(() => {
+                    if (isLogDivFullyScrolled()) {
+                        scrollToBottomBtn.classList.remove("shown");
+                    } else {
+                        scrollToBottomBtn.classList.add("shown");
+                    }
+                }, 100));
+                scrollToBottomBtn.classList.add("shown");
+            }
 
             document.querySelectorAll("nav ul.servers li .dynamic-dropdown").forEach(dropdown => {
                 const serverType = dropdown.getAttribute("server-type");

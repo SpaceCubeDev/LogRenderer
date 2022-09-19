@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-VERSION="2.2.4"
+VERSION="2.2.5"
 BINARY_FILENAME="LogRenderer-$VERSION"
 FILENAME_EXT=".xz"
 OUTPUT_DIR="compiled"

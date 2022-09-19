@@ -108,6 +108,23 @@ main .logs .row.highlighted {
     background: linear-gradient(to right, #006400ba 50%, transparent);
 }
 
+#scroll-to-bottom {
+    opacity: 0;
+    position: absolute;
+    bottom: 25px;
+    right: 25px;
+    background-color: rgba(var(--common-gray), 0.75);
+    padding: 5px 15px;
+    color: white;
+    font-size: 2em;
+    cursor: pointer;
+    transition: 0.1s ease;
+}
+
+#scroll-to-bottom.shown {
+    opacity: 1;
+}
+
 @-webkit-keyframes pulse {
     from {
         background-color: #749a02;

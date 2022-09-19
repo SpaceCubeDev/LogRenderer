@@ -1,5 +1,12 @@
-mc-content: ""
-mc-time: "color: #65a6dd;"
-mc-info: "color: #686ced;"
-mc-warn: "color: #dcc369;"
-mc-error: "color: #ff7171;"
+content: ""
+time: "color: #00C5FF;"
+
+debug: "color: lightslategray;"
+info: "color: #686ced;"
+warn: "color: #dcc369;"
+error: "color: #ff7171;"
+critical: "color: #ff7171; background-color: #53372c7a;"
+
+user: "color: #b4db28;"
+host: "color: #68b31d;"
+ufw: "color: yellow; font-weight: bold;"

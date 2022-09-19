@@ -5,7 +5,7 @@
     right: 25px;
     top: 50%;
     transform: translateY(-50%);
-    background-color: rgba(55, 55, 55, 0.75);
+    background-color: rgba(var(--common-gray), 0.75);
     cursor: pointer;
 }
 
@@ -26,7 +26,8 @@
 }
 
 #archive-loader-background.hidden {
-    visibility: hidden;
+    /*visibility: hidden;*/
+    display: none;
 }
 
 #archive-loader {
