@@ -94,6 +94,10 @@
             return Math.abs((window.scrollY + window.innerHeight - logsDiv.getBoundingClientRect().top - logsDiv.offsetParent.getBoundingClientRect().top) - logsDiv.scrollHeight) < 20;
         }
 
+        function isLogDivFull() {
+            return logsDiv.getBoundingClientRect().height > logsDiv.parentElement.getBoundingClientRect().height;
+        }
+
         function scrollToEnd() {
             logsDiv.lastElementChild?.scrollIntoView();
         }
@@ -205,14 +209,18 @@
             const scrollToBottomBtn = document.getElementById("scroll-to-bottom");
             if (scrollToBottomBtn) {
                 scrollToBottomBtn.addEventListener("click", scrollToEnd);
-                logsDiv.parentElement.addEventListener("scroll", debounce(() => {
-                    if (isLogDivFullyScrolled()) {
+                const updateBtn = debounce(() => {
+                    if (!isLogDivFull() || isLogDivFullyScrolled()) {
                         scrollToBottomBtn.classList.remove("shown");
                     } else {
                         scrollToBottomBtn.classList.add("shown");
                     }
-                }, 100));
-                scrollToBottomBtn.classList.add("shown");
+                }, 100);
+                logsDiv.parentElement.addEventListener("scroll", updateBtn);
+                window.addEventListener("resize", updateBtn);
+                if (isLogDivFull()) {
+                    scrollToBottomBtn.classList.add("shown");
+                }
             }
 
             document.querySelectorAll("nav ul.servers li .dynamic-dropdown").forEach(dropdown => {

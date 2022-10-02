@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-var version = "2.2.5-dev"
+var version = "2.2.6-dev"
 
 const instancesRefreshIntervalPerServer = 2 * time.Second
 

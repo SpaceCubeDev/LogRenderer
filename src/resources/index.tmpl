@@ -13,10 +13,10 @@
 <script>
     function toggleDynamicDropdown(serverType) {
         const dropdown = document.querySelector(`nav ul.servers li .dynamic-dropdown[server-type=${serverType}]`);
-        const dropdownContent = dropdown.querySelector(`.dynamic-dropdown-content`);
         if (dropdown.classList.contains("selected")) {
             dropdown.classList.remove("selected");
         } else {
+            const dropdownContent = dropdown.querySelector(`.dynamic-dropdown-content`);
             if (dropdownContent.childElementCount === 0) {
                 // get server instances
                 console.info("Fetching", serverType, "instances ...");
