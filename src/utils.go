@@ -91,6 +91,7 @@ func prettier(w http.ResponseWriter, message string, data any, status int) {
 	}
 }
 
+// extractMaxLinesCount returns the maximum number of log lines wanted by the client
 func extractMaxLinesCount(r *http.Request) int {
 	cookie, err := r.Cookie("max-lines-count")
 	if err != nil { // cookie not found
