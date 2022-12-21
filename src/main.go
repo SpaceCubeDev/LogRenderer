@@ -9,7 +9,7 @@ import (
 	fifo "github.com/foize/go.fifo"
 )
 
-var version = "2.2.6-dev"
+var version = "2.2.7-dev"
 
 const instancesRefreshIntervalPerServer = 2 * time.Second
 
