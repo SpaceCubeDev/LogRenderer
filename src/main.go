@@ -4,8 +4,9 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	fifo "github.com/foize/go.fifo"
 	"time"
+
+	fifo "github.com/foize/go.fifo"
 )
 
 var version = "2.2.6-dev"

@@ -1,9 +1,10 @@
 package main
 
 import (
-	fifo "github.com/foize/go.fifo"
 	"strings"
 	"time"
+
+	fifo "github.com/foize/go.fifo"
 )
 
 const sendInterval = 5 * time.Millisecond

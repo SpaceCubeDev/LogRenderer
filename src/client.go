@@ -3,8 +3,9 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/gorilla/websocket"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 const (

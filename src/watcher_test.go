@@ -1,12 +1,13 @@
 package main
 
 import (
-	fifo "github.com/foize/go.fifo"
 	"math/rand"
 	"os"
 	"path"
 	"testing"
 	"time"
+
+	fifo "github.com/foize/go.fifo"
 )
 
 func TestWatcherWrite(t *testing.T) {

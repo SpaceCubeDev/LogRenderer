@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-const addr = ":8080"
+const addr = ":8181"
 
 func TestMaxLineCountExtraction(t *testing.T) {
 	maxLinesCountChan := make(chan int, 1)

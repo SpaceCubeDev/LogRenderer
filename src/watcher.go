@@ -1,13 +1,14 @@
 package main
 
 import (
-	fifo "github.com/foize/go.fifo"
-	"github.com/fsnotify/fsnotify"
 	"io"
 	"log"
 	"os"
 	"sync"
 	"time"
+
+	fifo "github.com/foize/go.fifo"
+	"github.com/fsnotify/fsnotify"
 )
 
 const bufferSize = 32768

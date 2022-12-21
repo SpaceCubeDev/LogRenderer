@@ -3,13 +3,14 @@ package main
 import (
 	"errors"
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"html/template"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
 	"time"
+
+	"gopkg.in/yaml.v3"
 )
 
 // serverTagRegexp can be used to check whether a server tag is valid or not

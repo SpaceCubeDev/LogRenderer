@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	fifo "github.com/foize/go.fifo"
 	"net/http"
 	"path/filepath"
 	"strings"
 	"time"
+
+	fifo "github.com/foize/go.fifo"
 )
 
 // DynamicServerInstance represents an instance of a dynamic server with its own properties and state
