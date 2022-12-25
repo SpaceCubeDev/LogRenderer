@@ -1,0 +1,11 @@
+version: "3.8"
+services:
+  logrenderer:
+    image: "logrenderer:2.3.0"
+    ports:
+      - "8081:8081"
+    volumes:
+      - "./config_example.yml:/app/config.yml:ro"
+      - "./logs-styles.yml:/app/logs-styles.yml:ro"
+      - "/:/mnt:ro" # For accessing the log files everywhere on the host
+      - "/etc/localtime:/etc/localtime:ro" # To get the host's timezone
