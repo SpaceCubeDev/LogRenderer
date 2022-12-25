@@ -1,8 +1,7 @@
 #!/bin/bash -e
 
-VERSION="2.2.7"
+VERSION="2.3.0"
 BINARY_FILENAME="LogRenderer-$VERSION"
-FILENAME_EXT=".xz"
 OUTPUT_DIR="compiled"
 
 if [ $# -ge 1 ] && [ -n "$1" ] && [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
@@ -23,6 +22,7 @@ TAGS=" -tags osusergo,netgo"
 STATIC_MSG=" statically"
 STRIP="strip $BINARY_FILENAME"
 COMPRESS="xz $BINARY_FILENAME"
+FILENAME_EXT=".xz"
 
 while (($#)); do
     [[ $1 = -- ]] && {
@@ -45,6 +45,10 @@ while (($#)); do
         # skip xz command
         COMPRESS=true
         FILENAME_EXT=""
+        ;;
+    *)
+        echo "Unknown option '$1'"
+        exit 1
         ;;
     esac
     shift

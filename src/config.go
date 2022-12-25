@@ -29,6 +29,7 @@ type ServerConfig struct {
 	// The name that will be displayed on the web interface.
 	// For dynamic servers, it can contain a %id% placeholder that will be replaced by the instance identifier
 	DisplayName string `yaml:"display-name"`
+	pathPrefix  string
 	// The regexps for the syntax highlighting for the logs of this server
 	SyntaxHighlightingRegexps SyntaxHighlightingConfig `yaml:"syntax-highlighting"`
 	// A pointer to the logs style dictionnary
@@ -89,6 +90,10 @@ type Config struct {
 	// The real value of DelayBeforeRewatch
 	delayBeforeRewatch time.Duration
 
+	// An optional prefix that will be added in front of each log file path,
+	// for instance when the filesystem is mounted as a volume in a container at e.g. /mnt
+	PathPrefix string `yaml:"path-prefix"`
+
 	// The path of the file containing the logs style rules
 	StyleFilePath string `yaml:"style-file-path"`
 	// The styles as a map like name:css
@@ -104,7 +109,7 @@ type Config struct {
 }
 
 // getIdentifierFrom looks for the identifier in the given logFilePath using the server identifier regexp
-func (servCfg DynamicServerConfig) getIdentifierFrom(logFilePath string) (id string, found bool) {
+func (servCfg *DynamicServerConfig) getIdentifierFrom(logFilePath string) (id string, found bool) {
 	id = findAllGroups(servCfg.logFileIdentifierRegexp, logFilePath)["id"]
 	return id, id != ""
 }
@@ -121,9 +126,9 @@ func (config Config) String() string {
 	for _, servCfg := range config.Servers.Classic {
 		str += "\t" + servCfg.ServerTag + ":\n"
 		str += "\t\tdisplay-name: " + servCfg.DisplayName + "\n"
-		str += "\t\tlog-file-path: " + servCfg.LogFilePath + "\n"
+		str += "\t\tlog-file-path: " + servCfg.getLogFilePath() + "\n"
 		if servCfg.archivesEnabled {
-			str += "\t\tarchived-logs-dir-pattern: " + servCfg.ArchivedLogsDirPath + "\n"
+			str += "\t\tarchived-logs-dir-path: " + servCfg.getArchivedLogsDirPath() + "\n"
 			str += "\t\tarchived-logs-filename-format: " + servCfg.ArchivedLogFilenameFormat + "\n"
 		} else {
 			str += "\t\tarchives not enabled\n"
@@ -133,10 +138,10 @@ func (config Config) String() string {
 	for _, servCfg := range config.Servers.Dynamic {
 		str += "\t" + servCfg.ServerTag + ":\n"
 		str += "\t\tdisplay-name: " + servCfg.DisplayName + "\n"
-		str += "\t\tlog-file-pattern: " + servCfg.LogFilePattern + "\n"
+		str += "\t\tlog-file-pattern: " + servCfg.getLogFilePattern() + "\n"
 		str += "\t\tinstance-identifier: " + servCfg.InstanceIdentifier + "\n"
 		if servCfg.archivesEnabled {
-			str += "\t\tarchived-logs-root-dir: " + servCfg.ArchivedLogsRootDir + "\n"
+			str += "\t\tarchived-logs-root-dir: " + servCfg.getArchivedLogsRootDir() + "\n"
 			str += "\t\tarchived-logs-file-pattern: " + servCfg.ArchivedLogsFilePattern + "\n"
 		} else {
 			str += "\t\tarchives not enabled\n"
@@ -187,6 +192,7 @@ func loadConfigFrom(configPath string) (Config, error) {
 
 	for servIndex := range config.Servers.Classic {
 		servCfg := config.Servers.Classic[servIndex]
+		servCfg.pathPrefix = config.PathPrefix
 		err = servCfg.load(servIndex)
 		if err != nil {
 			return Config{}, err
@@ -197,6 +203,7 @@ func loadConfigFrom(configPath string) (Config, error) {
 	}
 	for servIndex := range config.Servers.Dynamic {
 		servCfg := config.Servers.Dynamic[servIndex]
+		servCfg.pathPrefix = config.PathPrefix
 		err = servCfg.load(servIndex)
 		if err != nil {
 			return Config{}, err
@@ -225,8 +232,16 @@ func loadStyles(styleFilePath string) (map[string]string, error) {
 	return styles, nil
 }
 
+func (servCfg *ClassicServerConfig) getLogFilePath() string {
+	return filepath.Join(servCfg.pathPrefix, servCfg.LogFilePath)
+}
+
+func (servCfg *ClassicServerConfig) getArchivedLogsDirPath() string {
+	return filepath.Join(servCfg.pathPrefix, servCfg.ArchivedLogsDirPath)
+}
+
 func (servCfg *ClassicServerConfig) load(servIndex int) error {
-	err := checkFile(servCfg.LogFilePath)
+	err := checkFile(servCfg.getLogFilePath())
 	if err != nil {
 		return err
 	}
@@ -238,7 +253,7 @@ func (servCfg *ClassicServerConfig) load(servIndex int) error {
 
 	servCfg.archivesEnabled = servCfg.ArchivedLogsDirPath != ""
 	if servCfg.archivesEnabled {
-		err = checkDir(servCfg.ArchivedLogsDirPath)
+		err = checkDir(servCfg.getArchivedLogsDirPath())
 		if err != nil {
 			return err
 		}
@@ -250,6 +265,14 @@ func (servCfg *ClassicServerConfig) load(servIndex int) error {
 	return nil
 }
 
+func (servCfg *DynamicServerConfig) getLogFilePattern() string {
+	return filepath.Join(servCfg.pathPrefix, servCfg.LogFilePattern)
+}
+
+func (servCfg *DynamicServerConfig) getArchivedLogsRootDir() string {
+	return filepath.Join(servCfg.pathPrefix, servCfg.ArchivedLogsRootDir)
+}
+
 func (servCfg *DynamicServerConfig) load(servIndex int) error {
 	err := servCfg.loadCommon("dynamic", servIndex)
 	if err != nil {
@@ -257,7 +280,7 @@ func (servCfg *DynamicServerConfig) load(servIndex int) error {
 	}
 
 	// LogFilePattern validity check
-	if _, err = filepath.Match(servCfg.LogFilePattern, ""); err != nil {
+	if _, err = filepath.Match(servCfg.getLogFilePattern(), ""); err != nil {
 		return fmt.Errorf("invalid log-file-pattern for dynamic server %q: %w", servCfg.ServerTag, err)
 	}
 

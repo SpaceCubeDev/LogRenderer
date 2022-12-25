@@ -97,7 +97,7 @@ func joinWSServer(server, instance string) string {
 }
 
 func getDynamicServerInstances(servCfg DynamicServerConfig) ([]DynamicServerInstance, error) {
-	logFilesPaths, err := filepath.Glob(servCfg.LogFilePattern)
+	logFilesPaths, err := filepath.Glob(servCfg.getLogFilePattern())
 	if err != nil {
 		return nil, fmt.Errorf("invalid log file pattern: %v", err)
 	}
@@ -125,7 +125,7 @@ func getAllDynamicInstances(dynamicServConfigs []DynamicServerConfig, onlyThisSe
 		if onlyThisServer != "" && servCfg.ServerTag != onlyThisServer {
 			continue
 		}
-		logFilesPaths, err := filepath.Glob(servCfg.LogFilePattern)
+		logFilesPaths, err := filepath.Glob(servCfg.getLogFilePattern())
 		if err != nil {
 			debugPrint(fmt.Sprintf("invalid log file pattern for server %q: %v", servCfg.ServerTag, err))
 			return nil, http.StatusInternalServerError
@@ -149,12 +149,12 @@ func getDynamicServerConfigAndLogsPath(dynamicServConfigs []DynamicServerConfig,
 		if servCfg.ServerTag != server {
 			continue
 		}
-		logFilesPaths, err := filepath.Glob(servCfg.LogFilePattern)
+		logFilesPaths, err := filepath.Glob(servCfg.getLogFilePattern())
 		if err != nil {
 			debugPrint(fmt.Sprintf("invalid log file pattern for server %q: %v", servCfg.ServerTag, err))
 			return DynamicServerConfig{}, "", false
 		}
-		for _, logFilePath := range logFilesPaths {
+		for _, logFilePath = range logFilesPaths {
 			id, found := servCfg.getIdentifierFrom(logFilePath)
 			if !found {
 				debugPrint(fmt.Sprintf("Instance identifier not found for server %q !", servCfg.ServerTag))

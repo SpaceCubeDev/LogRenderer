@@ -202,7 +202,7 @@ func serverHandler(w http.ResponseWriter, r *http.Request, templateCommonData Co
 
 	var availableLogFiles []archiveEntry
 	if servCfg.archivesEnabled {
-		availableLogFiles, err = listArchivedLogFiles(servCfg.ArchivedLogsDirPath, servCfg.ArchivedLogFilenameFormat)
+		availableLogFiles, err = listArchivedLogFiles(servCfg.getArchivedLogsDirPath(), servCfg.ArchivedLogFilenameFormat)
 		if err != nil {
 			handleTemplateError(w, http.StatusInternalServerError, err)
 			return
@@ -225,7 +225,7 @@ func serverHandler(w http.ResponseWriter, r *http.Request, templateCommonData Co
 			ServerDisplayName:         servCfg.DisplayName,
 			SyntaxHighlightingRegexps: servCfg.SyntaxHighlightingRegexps,
 			LogsStyles:                *servCfg.styles,
-			ServerLogs:                getServerLogs(servCfg.LogFilePath, maxLines),
+			ServerLogs:                getServerLogs(servCfg.getLogFilePath(), maxLines),
 		},
 	})
 	if err != nil {
@@ -281,7 +281,7 @@ func dynamicServerHandler(w http.ResponseWriter, r *http.Request, templateCommon
 
 	var availableLogFiles []archiveEntry
 	if servCfg.archivesEnabled {
-		logsDir := strings.ReplaceAll(servCfg.ArchivedLogsRootDir, "%id%", serverId)
+		logsDir := strings.ReplaceAll(servCfg.getArchivedLogsRootDir(), "%id%", serverId)
 		logsFilePattern := strings.ReplaceAll(servCfg.ArchivedLogsFilePattern, "%id%", serverId)
 		availableLogFiles, err = listArchivedLogFiles(logsDir, logsFilePattern)
 		if err != nil {
@@ -322,7 +322,7 @@ func archiveHandler(w http.ResponseWriter, r *http.Request, logFile string, temp
 		return
 	}
 
-	availableLogs, err := listArchivedLogFiles(servCfg.ArchivedLogsDirPath, servCfg.ArchivedLogFilenameFormat)
+	availableLogs, err := listArchivedLogFiles(servCfg.getArchivedLogsDirPath(), servCfg.ArchivedLogFilenameFormat)
 	if err != nil {
 		handleTemplateError(w, http.StatusInternalServerError, err)
 		return
@@ -344,7 +344,7 @@ func archiveHandler(w http.ResponseWriter, r *http.Request, logFile string, temp
 			ServerDisplayName:         servCfg.DisplayName,
 			SyntaxHighlightingRegexps: servCfg.SyntaxHighlightingRegexps,
 			LogsStyles:                *servCfg.styles,
-			ServerLogs:                getArchiveLogs(filepath.Join(servCfg.ArchivedLogsDirPath, filePathUnescape(logFile)), maxLines),
+			ServerLogs:                getArchiveLogs(filepath.Join(servCfg.getArchivedLogsDirPath(), filePathUnescape(logFile)), maxLines),
 		},
 	})
 	if err != nil {
@@ -359,7 +359,7 @@ func dynamicArchiveHandler(w http.ResponseWriter, r *http.Request, logFile strin
 		return
 	}
 
-	logsDir := strings.ReplaceAll(servCfg.ArchivedLogsRootDir, "%id%", serverId)
+	logsDir := strings.ReplaceAll(servCfg.getArchivedLogsRootDir(), "%id%", serverId)
 	logsFilePattern := strings.ReplaceAll(servCfg.ArchivedLogsFilePattern, "%id%", serverId)
 	availableLogs, err := listArchivedLogFiles(logsDir, logsFilePattern)
 	if err != nil {
@@ -399,7 +399,7 @@ func listArchivesHandler(w http.ResponseWriter, templateCommonData CommonWebData
 		return
 	}
 
-	availableLogs, err := listArchivedLogFiles(servCfg.ArchivedLogsDirPath, servCfg.ArchivedLogFilenameFormat)
+	availableLogs, err := listArchivedLogFiles(servCfg.getArchivedLogsDirPath(), servCfg.ArchivedLogFilenameFormat)
 	if err != nil {
 		handleTemplateError(w, http.StatusInternalServerError, err)
 		return
@@ -433,7 +433,7 @@ func listDynamicArchivesHandler(w http.ResponseWriter, templateCommonData Common
 		return
 	}
 
-	logsDir := strings.ReplaceAll(servCfg.ArchivedLogsRootDir, "%id%", serverId)
+	logsDir := strings.ReplaceAll(servCfg.getArchivedLogsRootDir(), "%id%", serverId)
 	logsFilePattern := strings.ReplaceAll(servCfg.ArchivedLogsFilePattern, "%id%", serverId)
 	availableLogs, err := listArchivedLogFiles(logsDir, logsFilePattern)
 	if err != nil {

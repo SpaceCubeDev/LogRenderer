@@ -11,7 +11,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
-const bufferSize = 32768
+const bufferSize = 2 << 14
 
 func watchServ(logQueue *fifo.Queue, properties watchProperties) {
 

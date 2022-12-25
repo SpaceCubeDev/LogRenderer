@@ -9,13 +9,11 @@ import (
 	fifo "github.com/foize/go.fifo"
 )
 
-var version = "2.2.7-dev"
+var version = "2.3.0-dev"
 
 const instancesRefreshIntervalPerServer = 2 * time.Second
 
 var doDebug bool
-
-// func mainn(configPath *string) {
 
 func main() {
 
@@ -49,7 +47,7 @@ func main() {
 		logQueue := fifo.NewQueue()
 		go watchServ(logQueue, watchProperties{
 			servName:                  servCfg.ServerTag,
-			logFilePath:               servCfg.LogFilePath,
+			logFilePath:               servCfg.getLogFilePath(),
 			shouldRewatchOnFileRemove: true,
 			delayBeforeRewatch:        config.delayBeforeRewatch,
 		})
@@ -65,7 +63,6 @@ func main() {
 		dynamicServers[servCfg.ServerTag] = server
 		hub.clientsByDynamicServer[servCfg.ServerTag] = make(map[string][]*Client)
 
-		// TODO: pass only the map instead of the whole hub ?
 		go server.watchForInstances(hub, outputChannel, instancesRefreshInterval)
 	}
 

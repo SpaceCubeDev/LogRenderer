@@ -16,6 +16,9 @@ website-favicon-url: "https://www.your-website.net/storage/img/your-favicon.png"
 debug: true
 # The delay before a new file watcher is started when a log file is reset/renamed
 delay-before-rewatch: "10ms"
+# An optional prefix that will be added in front of each log file path,
+# for instance when the filesystem is mounted as a volume in a container
+path-prefix: ""
 # The path of the file containing the logs style rules
 style-file-path: "logs-styles.yml"
 
