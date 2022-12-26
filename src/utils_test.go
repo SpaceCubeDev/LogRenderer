@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 	"testing"
@@ -12,19 +13,32 @@ const addr = ":8181"
 func TestMaxLineCountExtraction(t *testing.T) {
 	maxLinesCountChan := make(chan int, 1)
 
+	muxServer := http.NewServeMux()
+	muxServer.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		maxLinesCountChan <- extractMaxLinesCount(r)
+	})
+	httpServer := http.Server{
+		Addr:    addr,
+		Handler: muxServer,
+	}
 	go func() {
-		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-			maxLinesCountChan <- extractMaxLinesCount(r)
-		})
-		t.Error(http.ListenAndServe(addr, nil))
+		err := httpServer.ListenAndServe()
+		if err != nil && err != http.ErrServerClosed {
+			t.Error("Failed to start http server:", err)
+		}
 	}()
+
 	time.Sleep(100 * time.Millisecond)
 
-	testWith(t, 0, maxLinesCountChan)
+	testWith(t, 1, maxLinesCountChan)
 	testWith(t, 1, maxLinesCountChan)
 	testWith(t, defaultMaxLinesCount, maxLinesCountChan)
 	testWith(t, 1234567, maxLinesCountChan)
 	testWith(t, -42, maxLinesCountChan)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	httpServer.Shutdown(ctx)
 }
 
 func testWith(t *testing.T, maxLinesCount int, maxLinesCountChan chan int) {
