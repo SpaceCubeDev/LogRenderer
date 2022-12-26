@@ -38,7 +38,10 @@ func TestMaxLineCountExtraction(t *testing.T) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-	httpServer.Shutdown(ctx)
+	err := httpServer.Shutdown(ctx)
+	if err != nil {
+		t.Log("Failed to shutdown http server:", err)
+	}
 }
 
 func testWith(t *testing.T, maxLinesCount int, maxLinesCountChan chan int) {
