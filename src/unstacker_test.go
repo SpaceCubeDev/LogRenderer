@@ -55,7 +55,7 @@ func TestUnstackers(t *testing.T) {
 				return
 			}
 			if chanEvt.Server != "test" {
-				t.Errorf("Bad event server: want %q, got %q.", "test", chanEvt.Content)
+				t.Errorf("Bad event server: want %q, got %q.", "test", chanEvt.Server)
 				doneChannel <- struct{}{}
 				return
 			}
