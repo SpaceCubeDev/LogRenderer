@@ -8,9 +8,12 @@ import (
 	"time"
 
 	fifo "github.com/foize/go.fifo"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestUnstackers(t *testing.T) {
+	rand.Seed(time.Now().Unix())
+
 	const iters = 1000
 	logQueue := fifo.NewQueue()
 	dynamicLogQueue := fifo.NewQueue()
@@ -48,30 +51,25 @@ func TestUnstackers(t *testing.T) {
 				logQueue.Add(evt)
 			}
 
-			chanEvt := <-outputChannel
-			if chanEvt.Type != evt.eventType {
-				t.Errorf("Bad event type: want %s, got %s.", evt.eventType, chanEvt.Type)
+			outputEvt := <-outputChannel
+			if !assert.Equal(t, evt.eventType, outputEvt.Type, "Bad event type") {
 				doneChannel <- struct{}{}
 				return
 			}
-			if chanEvt.Server != "test" {
-				t.Errorf("Bad event server: want %q, got %q.", "test", chanEvt.Server)
+			if !assert.Equal(t, "test", outputEvt.Server, "Bad event server") {
 				doneChannel <- struct{}{}
 				return
 			}
-			if chanEvt.Content != evt.content {
-				t.Errorf("Bad event content: want %q, got %q.", evt.content, chanEvt.Content)
+			if !assert.Equal(t, evt.content, outputEvt.Content, "Bad event content") {
 				doneChannel <- struct{}{}
 				return
 			}
 			if dynamic {
-				if !chanEvt.isDynamic {
-					t.Errorf("Event wasn't marked as dynamic when it should have been.")
+				if !assert.True(t, outputEvt.isDynamic, "Event wasn't marked as dynamic when it should have been.") {
 					doneChannel <- struct{}{}
 					return
 				}
-				if chanEvt.instance != "t" {
-					t.Errorf("Bad event instance: want %q, got %q.", "t", chanEvt.instance)
+				if !assert.Equal(t, "t", outputEvt.instance, "Bad event instance") {
 					doneChannel <- struct{}{}
 					return
 				}

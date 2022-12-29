@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"testing"
 	"time"
-)
 
-const addr = ":8181"
+	"github.com/stretchr/testify/assert"
+)
 
 func TestMaxLineCountExtraction(t *testing.T) {
 	maxLinesCountChan := make(chan int, 1)
@@ -18,7 +18,7 @@ func TestMaxLineCountExtraction(t *testing.T) {
 		maxLinesCountChan <- extractMaxLinesCount(r)
 	})
 	httpServer := http.Server{
-		Addr:    addr,
+		Addr:    testAddr,
 		Handler: muxServer,
 	}
 	go func() {
@@ -59,13 +59,11 @@ func testWith(t *testing.T, maxLinesCount int, maxLinesCountChan chan int) {
 		expected = defaultMaxLinesCount
 	}
 	receivedMaxLinesCount := <-maxLinesCountChan
-	if receivedMaxLinesCount != expected {
-		t.Errorf("Expected %d, got %d", expected, receivedMaxLinesCount)
-	}
+	assert.Equal(t, expected, receivedMaxLinesCount, "Invalid max lines count")
 }
 
 func newRequestWith(t *testing.T, maxLinesCount int) *http.Request {
-	req, err := http.NewRequest(http.MethodGet, "http://localhost"+addr, nil)
+	req, err := http.NewRequest(http.MethodGet, "http://localhost"+testAddr, nil)
 	if err != nil {
 		t.Fatal("Failed to create request:", err)
 	}
