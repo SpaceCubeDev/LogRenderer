@@ -58,7 +58,7 @@
     function handleEvent(data) {
         let event;
         try {
-            event = JSON.parse(data);
+            event = JSON.parse(atob(data));
         } catch (e) {
             console.error(e);
             console.log("EventData:", data);

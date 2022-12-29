@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"sync"
@@ -92,13 +93,17 @@ func (hub *Hub) run(eventChan <-chan Event) {
 		case client := <-hub.unregister:
 			hub.disconnectClient(client, hub.clients[client])
 		case evt := <-eventChan:
-			eventMsg := append(evt.Json(), messageSeparator...)
+			eventMsg := evt.Json()
+			encodeLength := base64.StdEncoding.EncodedLen(len(eventMsg))
+			encodedEventMsg := make([]byte, encodeLength, encodeLength+len(messageSeparator))
+			base64.StdEncoding.Encode(encodedEventMsg, eventMsg)
+			encodedEventMsg = append(encodedEventMsg, messageSeparator...)
 			for _, client := range hub.getClientsSubscribedTo(evt) {
 				if !client.connected {
 					continue
 				}
 				select {
-				case client.send <- eventMsg:
+				case client.send <- encodedEventMsg:
 					// Message sent successfully
 				default:
 					hub.disconnectClient(client, evt.Server)
