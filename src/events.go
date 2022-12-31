@@ -25,9 +25,8 @@ type Event struct {
 	Server    string `json:"server"`
 	isDynamic bool
 	instance  string
-	// ServerDisplayName string `json:"server_display_name"`
-	Content string `json:"content"`
-	Message string `json:"message"`
+	Content   string `json:"content"`
+	Message   string `json:"message"`
 }
 
 func (event Event) String() string {
@@ -48,17 +47,6 @@ func (event Event) String() string {
 		str += "/!\\ Unknown event type ! /!\\\n"
 	}
 
-	/*if event.Type != eventAdd && event.Type != eventReset && event.Type != eventError {
-		return str + "/!\\ Unknown event type ! /!\\\n"
-	}
-	if event.Type == eventError {
-		return str + "Message: " + event.Message + "\n"
-	}
-	str += "Server: " + event.Server + "\n"
-	// str += "DisplayName: " + event.ServerDisplayName + "\n"
-	if event.Type == eventAdd {
-		str += "Content: " + event.Content + "\n"
-	}*/
 	return str
 }
 

@@ -31,12 +31,14 @@ func exitWithError(err error) {
 	os.Exit(1)
 }
 
+// debugPrint prints the given message only if debug mode is enabled
 func debugPrint(msg string) {
 	if doDebug {
 		log.Println("[DEBUG]", msg)
 	}
 }
 
+// checkFile returns an error if the file at the given path is a directory or inexisting
 func checkFile(filePath string) error {
 	fileStat, err := os.Stat(filePath)
 	if err != nil {
@@ -51,6 +53,7 @@ func checkFile(filePath string) error {
 	return nil
 }
 
+// checkDir returns an error if the file at the given path is not a directory or is inexisting
 func checkDir(dirPath string) error {
 	fileStat, err := os.Stat(dirPath)
 	if err != nil {
@@ -65,14 +68,18 @@ func checkDir(dirPath string) error {
 	return nil
 }
 
-func prefix(servName string, endingSpace bool) string {
+func prefix(servName string, endingSpace ...bool) string {
 	space := ""
-	if endingSpace {
+	if len(endingSpace) > 1 {
+		panic("invalid usage of utils.prefix")
+	}
+	if len(endingSpace) == 1 && endingSpace[0] {
 		space = " "
 	}
 	return fmt.Sprintf("[%s]%s", servName, space)
 }
 
+// prettier sends the given message & data formatted as json on the given writer, with the given status
 func prettier(w http.ResponseWriter, message string, data any, status int) {
 	if data == nil {
 		data = struct{}{}
@@ -95,7 +102,7 @@ func prettier(w http.ResponseWriter, message string, data any, status int) {
 func extractMaxLinesCount(r *http.Request) int {
 	cookie, err := r.Cookie("max-lines-count")
 	if err != nil { // cookie not found
-		return 0
+		return defaultMaxLinesCount
 	}
 	maxLines, _ := strconv.Atoi(cookie.Value)
 	if maxLines == 0 {

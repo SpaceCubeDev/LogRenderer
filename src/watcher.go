@@ -72,16 +72,16 @@ func watchServ(logQueue *fifo.Queue, properties watchProperties) {
 						})
 					}
 					if readLength >= bufferSize {
-						log.Println(prefix(properties.servName, false), "Buffer size is not enough, missing", readLength-bufferSize, "of length")
+						log.Println(prefix(properties.servName), "Buffer size is not enough, missing", readLength-bufferSize, "of length")
 					}
 					_ = file.Close()
 				} else if event.Op&fsnotify.Rename == fsnotify.Rename {
-					log.Println(prefix(properties.servName, false), "Rename")
+					log.Println(prefix(properties.servName), "Rename")
 					shouldRewatch = properties.shouldRewatchOnFileRemove
 					wg.Done()
 					return
 				} else if event.Op&fsnotify.Remove == fsnotify.Remove {
-					log.Println(prefix(properties.servName, false), "Remove")
+					log.Println(prefix(properties.servName), "Remove")
 					if properties.shouldRewatchOnFileRemove {
 						if err = checkFile(properties.logFilePath); err != nil {
 							printError(err)
@@ -95,7 +95,7 @@ func watchServ(logQueue *fifo.Queue, properties watchProperties) {
 					wg.Done()
 					return
 				} else {
-					log.Println(prefix(properties.servName, false), "event:", event)
+					log.Println(prefix(properties.servName), "event:", event)
 				}
 			}
 		}()
