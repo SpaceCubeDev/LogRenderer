@@ -74,7 +74,7 @@ func (c *Client) writer() {
 				_, _ = w.Write(<-c.send)
 			}
 
-			if err := w.Close(); err != nil {
+			if err = w.Close(); err != nil {
 				return
 			}
 		case <-ticker.C:

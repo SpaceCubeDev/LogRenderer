@@ -1,5 +1,6 @@
 {{ define "navbar" }}
     {{- $urlPrefix := .UrlPrefix -}}
+    {{- $servDisplayName := .ServerDisplayName -}}
     <nav>
         <div class="app-logo">
             <a href="{{ .WebsiteHomeUrl }}">
@@ -16,14 +17,19 @@
                 <li>
                     {{- if $serv.IsDynamic }}
                         <div class="dynamic-dropdown" server-type="{{ $serv.Tag }}">
-                            <span class="dynamic-dropdown-title{{- if and (isServer) (eq $serv.Tag getCurrentServer) }} active{{ end }}"
-                                  title="Click to toggle instances">{{ $serv.DisplayName }}</span>
+                            {{- if and (isServer) (eq $serv.Tag getCurrentServer) }}
+                                <span class="dynamic-dropdown-title active"
+                                      title="Click to toggle instances">{{ $servDisplayName }}</span>
+                            {{- else }}
+                                <span class="dynamic-dropdown-title"
+                                      title="Click to toggle instances">{{ $serv.DisplayName }}</span>
+                            {{ end }}
                             <div class="dynamic-dropdown-content"></div>
                         </div>
                     {{- else }}
                         <a href="{{ $urlPrefix }}/server/{{ $serv.Tag }}"
                                 {{- if and (isServer) (eq $serv.Tag getCurrentServer) }} class="active"{{ end }}>{{ $serv.DisplayName }}</a>
-                    {{ end -}}
+                    {{- end }}
                 </li>
             {{ end -}}
         </ul>
@@ -54,7 +60,9 @@
             {{ if isIndex -}}
                 <span id="version" title="Current LogRenderer version">{{ .Version }}</span>
             {{- else -}}
-                <label for="max-lines-count" title="Maximum lines count"><input id="max-lines-count" type="number" min="-1" max="99999"></label>
+                <label for="max-lines-count" title="Maximum lines count">
+                    <input id="max-lines-count" type="number" min="-1" max="99999">
+                </label>
             {{- end }}
         </div>
     </nav>

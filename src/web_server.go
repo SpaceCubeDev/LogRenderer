@@ -188,8 +188,10 @@ func indexHandler(w http.ResponseWriter, _ *http.Request, templateCommonData Com
 	}{
 		CommonWebData: templateCommonData,
 	})
-	if err != nil {
-		printError(err)
+	if doDebug {
+		if err != nil {
+			printError(err)
+		}
 	}
 }
 
@@ -228,8 +230,10 @@ func serverHandler(w http.ResponseWriter, r *http.Request, templateCommonData Co
 			ServerLogs:                getServerLogs(servCfg.getLogFilePath(), maxLines),
 		},
 	})
-	if err != nil {
-		printError(err)
+	if doDebug {
+		if err != nil {
+			printError(err)
+		}
 	}
 }
 
@@ -310,8 +314,10 @@ func dynamicServerHandler(w http.ResponseWriter, r *http.Request, templateCommon
 			ServerLogs:                getServerLogs(logFilePath, maxLines),
 		},
 	})
-	if err != nil {
-		printError(err)
+	if doDebug {
+		if err != nil {
+			printError(err)
+		}
 	}
 }
 
@@ -347,8 +353,10 @@ func archiveHandler(w http.ResponseWriter, r *http.Request, logFile string, temp
 			ServerLogs:                getArchiveLogs(filepath.Join(servCfg.getArchivedLogsDirPath(), filePathUnescape(logFile)), maxLines),
 		},
 	})
-	if err != nil {
-		printError(err)
+	if doDebug {
+		if err != nil {
+			printError(err)
+		}
 	}
 }
 
@@ -387,8 +395,10 @@ func dynamicArchiveHandler(w http.ResponseWriter, r *http.Request, logFile strin
 			ServerLogs:                getArchiveLogs(filepath.Join(logsDir, filePathUnescape(logFile)), maxLines),
 		},
 	})
-	if err != nil {
-		printError(err)
+	if doDebug {
+		if err != nil {
+			printError(err)
+		}
 	}
 }
 
@@ -421,8 +431,10 @@ func listArchivesHandler(w http.ResponseWriter, templateCommonData CommonWebData
 			LogsStyles:                *servCfg.styles,
 		},
 	})
-	if err != nil {
-		printError(err)
+	if doDebug {
+		if err != nil {
+			printError(err)
+		}
 	}
 }
 
@@ -458,7 +470,9 @@ func listDynamicArchivesHandler(w http.ResponseWriter, templateCommonData Common
 			LogsStyles:                *servCfg.styles,
 		},
 	})
-	if err != nil {
-		printError(err)
+	if doDebug {
+		if err != nil {
+			printError(err)
+		}
 	}
 }

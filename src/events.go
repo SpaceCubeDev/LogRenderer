@@ -69,8 +69,8 @@ func (event Event) Json() []byte {
 	}
 	jsonBytes, err := json.Marshal(event)
 	if err != nil {
-		printError(err)
-		return []byte(err.Error())
+		printError(fmt.Errorf("failed to marshal event: %w", err))
+		return []byte("{}")
 	}
 	return jsonBytes
 }
